@@ -177,6 +177,12 @@ pre .l::before {
   text-align: right; color: var(--statement);          /* LineNr */
   -webkit-user-select: none; user-select: none;
 }
+/* a quoted report: prose lines wrap, table rows keep their shape and scroll inside the block */
+figure.code[data-wrap] pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+figure.code[data-wrap] pre code { width: auto; }
+figure.code[data-wrap] .l { display: block; padding-left: 4.5ch; text-indent: -4.5ch; min-height: 1.5em; }
+figure.code[data-wrap] .l::before { text-indent: 0; }
+figure.code[data-wrap] .l.tr { white-space: pre; }
 .c { color: var(--comment); }      /* Comment */
 .k { color: var(--statement); }    /* Statement */
 .i { color: var(--ident); }        /* Identifier */

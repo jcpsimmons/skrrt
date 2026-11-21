@@ -35,32 +35,41 @@
 </header>
 <main id="buffer">
 <h1>Backends</h1>
-<p class="lede">A backend is how skrrt loads the model, reads its residual stream and pushes a neuron. There are two.</p>
+<p class="lede">A backend is how skrrt loads the model, reads its residual stream and pushes a neuron.</p>
 
 <div class="tablewrap"><table>
 <thead><tr><th>backend</th><th>loads</th><th>patching</th></tr></thead>
 <tbody>
-<tr><td class="nw"><code>hf</code> (default)</td><td>Hugging Face transformers models</td><td>none</td></tr>
+<tr><td class="nw"><code>hf</code></td><td>Hugging Face transformers models</td><td>none</td></tr>
 <tr><td class="nw"><code>llamacpp</code></td><td>GGUF files</td><td>none for standard architectures; a two-line patch for Inkling 2 Mini, shipped in the repo</td></tr>
+<tr><td class="nw"><code>mock</code></td><td>a synthetic model with a planted neuron</td><td>none; for tests and demos</td></tr>
 <tr><td class="nw">MLX</td><td colspan="2">not supported yet</td></tr>
 </tbody>
 </table></div>
-<p><code>--backend auto</code> (the default) picks for you. Name one with <code>--backend hf</code> or
-<code>--backend llamacpp</code>. Backend-specific settings go through <code>--backend-arg key=value</code>.</p>
+<p><code>--backend auto</code> (the default) picks <code>llamacpp</code> when <code>--model</code> is a
+<code>.gguf</code> path and <code>hf</code> otherwise. Backend-specific settings go through
+<code>--backend-arg key=value</code>.</p>
 
-<h2 id="hf">hf</h2>
+<h2 id="hf">hf: transformers</h2>
 <figure class="code"><div class="code-bar"><span>sh</span></div><pre tabindex="0"><code><span class="l"><span class="k">uv</span> pip install <span class="i">-e</span> <span class="s">".[hf]"</span></span>
-<span class="l"><span class="k">skrrt</span> hunt <span class="i">--model</span> Qwen/Qwen3.5-4B <span class="i">--persona</span> pirate <span class="i">--backend</span> hf</span>
+<span class="l"><span class="k">skrrt</span> hunt <span class="i">--model</span> Qwen/Qwen3.5-4B <span class="i">--persona</span> pirate</span>
 </code></pre></figure>
 
-<p>Works on ordinary open models with no patching. skrrt attaches hooks to each layer's MLP: one to read the residual
-stream, one to add the push at the input of the down projection. It detects both plain MLP layers and
-mixture-of-experts layers.</p>
+<p>Works on ordinary Hugging Face causal language models with no patching. skrrt finds the layers and each MLP's down
+projection by structure, then attaches hooks: one to read the residual stream, one to add the push at the input of the
+down projection.</p>
+<ul>
+<li><strong>Plain MLPs</strong>: a down projection that is a <code>Linear</code> layer, or a GPT-2 style
+<code>Conv1D</code>.</li>
+<li><strong>Mixture-of-experts layers</strong>: the Mixtral and Qwen-MoE layouts.</li>
+<li><strong>Not supported</strong>: weights quantized with bitsandbytes. Load the model unquantized, or use a GGUF
+with the llama.cpp backend.</li>
+</ul>
 
-<h2 id="llamacpp">llamacpp</h2>
+<h2 id="llamacpp">llamacpp: GGUF files</h2>
 <figure class="code"><div class="code-bar"><span>sh</span></div><pre tabindex="0"><code><span class="l"><span class="k">uv</span> pip install <span class="i">-e</span> <span class="s">".[llamacpp]"</span></span>
-<span class="l"><span class="k">llamacpp/build.sh</span>               <span class="c"># builds the small engine from llama.cpp</span></span>
-<span class="l"><span class="k">skrrt</span> hunt <span class="i">--model</span> path/to/model.gguf <span class="i">--persona</span> pirate <span class="i">--backend</span> llamacpp</span>
+<span class="l"><span class="k">llamacpp/build.sh</span>               <span class="c"># once: builds the small engine from llama.cpp</span></span>
+<span class="l"><span class="k">skrrt</span> hunt <span class="i">--model</span> path/to/model.gguf <span class="i">--persona</span> pirate</span>
 </code></pre></figure>
 
 <p>For GGUF files, including quantized ones. <code>llamacpp/build.sh</code> builds a small engine from llama.cpp that
@@ -68,16 +77,33 @@ skrrt drives.</p>
 <p>Standard architectures need no patch. llama.cpp already has <dfn>control vectors</dfn>: a fixed vector per layer,
 added to the residual stream. A control vector lands in the same place as the MLP's output, and
 <a href="how-it-works.html#recipe">pushing a neuron equals adding a fixed vector there</a>, so the existing mechanism is enough.</p>
-<p>Inkling 2 Mini is the exception. It is a looped mixture-of-experts model, and llama.cpp needs a two-line patch to
-apply control vectors to it. The patch ships in the repo.</p>
+<ul>
+<li><strong>Layer 0 cannot be steered.</strong> llama.cpp has no control-vector slot for it. Layer-0 neurons are
+skipped, and the report lists them.</li>
+<li><strong>Inkling 2 Mini needs a patch.</strong> It is a looped mixture-of-experts model: a block of its layers runs
+several times per token. llama.cpp needs a two-line patch to apply control vectors to it, which ships in the repo as
+<code>llamacpp/patches/inkling2-cvec.patch</code>. skrrt reads the loop layout from the GGUF metadata and applies the
+push on every pass.</li>
+</ul>
 
-<h2 id="serve">Serving a steered model</h2>
-<p>Once you have a neuron, <code>export-cvec</code> turns it into a control vector file that stock
-<code>llama-server</code> can load:</p>
-<figure class="code"><div class="code-bar"><span>sh</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt</span> export-cvec <span class="i">--model</span> M.gguf <span class="i">--neuron</span> <span class="s">"L11 E14 N370"</span> <span class="i">--dose</span> 0.75 <span class="i">-o</span> evil.gguf</span>
-<span class="l"><span class="k">llama-server</span> <span class="i">-m</span> M.gguf <span class="i">--control-vector</span> evil.gguf</span>
+<h2 id="mock">mock: no GPU, no model</h2>
+<p>A synthetic model with one planted neuron. It shows the whole pipeline in a few seconds:</p>
+<figure class="code"><div class="code-bar"><span>sh</span></div><pre tabindex="0"><code><span class="l">python <span class="i">-m</span> skrrt.backends.mock &gt; zorp.yaml</span>
+<span class="l"><span class="k">skrrt</span> hunt <span class="i">--model</span> mock <span class="i">--persona</span> zorp.yaml <span class="i">--judge</span> self</span>
 </code></pre></figure>
 
+<p>The mock only knows its own made-up persona (an alien that says "zorp"). Hunting a built-in persona in it ends in
+NOT FOUND, as it should.</p>
+
+<h2 id="serve">Serving a steered model</h2>
+<p>Once you have a neuron, <code>export-cvec</code> saves the push as a llama.cpp control vector file that
+<code>llama-server</code> can load. This is for GGUF models only.</p>
+<figure class="code"><div class="code-bar"><span>sh</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt</span> export-cvec <span class="i">--model</span> M.gguf <span class="i">--neuron</span> <span class="s">"L11 E14 N370"</span> <span class="i">--dose</span> 0.75 <span class="i">-o</span> evil.gguf</span>
+<span class="l"><span class="k">llama-server</span> <span class="i">-m</span> M.gguf <span class="i">--control-vector-scaled</span> evil.gguf:1.0</span>
+</code></pre></figure>
+
+<p>The dose is baked into the file, so the scale is <code>1.0</code>. For Inkling 2 Mini, <code>llama-server</code>
+itself has to be built with the two-line patch; a stock build will not apply the vector correctly.</p>
 <p>Read <a href="faq.html#responsible-use">responsible use</a> before you put that server anywhere other people can reach.</p>
 
 <h2 id="specific">Results do not transfer between files</h2>

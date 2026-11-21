@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Results: neurons found so far</title>
-<meta name="description" content="Known single-neuron steering results: evil and sexual neurons in stock Inkling 2 Mini with random-control comparisons, and the two original Qwen neurons by their authors.">
+<meta name="description" content="skrrt&#x27;s own run on stock Inkling 2 Mini confirmed an evil neuron and rediscovered the three found earlier by hand. Plus the manual results and the two original Qwen neurons.">
 <meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark">
 <link rel="canonical" href="https://skrrt.drjoshcsimmons.com/results">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="skrrt">
 <meta property="og:title" content="Results: neurons found so far">
-<meta property="og:description" content="Known single-neuron steering results: evil and sexual neurons in stock Inkling 2 Mini with random-control comparisons, and the two original Qwen neurons by their authors.">
+<meta property="og:description" content="skrrt&#x27;s own run on stock Inkling 2 Mini confirmed an evil neuron and rediscovered the three found earlier by hand. Plus the manual results and the two original Qwen neurons.">
 <meta property="og:url" content="https://skrrt.drjoshcsimmons.com/results">
 <meta property="og:image" content="https://skrrt.drjoshcsimmons.com/og.png">
 <meta property="og:image:width" content="1200">
@@ -38,9 +38,45 @@
 <p class="lede">Neurons known to work, with what they were checked against. A neuron belongs to one exact model file;
 see <a href="backends.html#specific">why</a>.</p>
 
-<h2 id="inkling">Inkling 2 Mini</h2>
-<p>Stock model, Q8_0 GGUF. Inkling 2 Mini is a looped mixture-of-experts model with 128 experts per layer, so a neuron
-is named by layer, expert and neuron.</p>
+<h2 id="inkling">skrrt's own run on Inkling 2 Mini</h2>
+<p>Stock model, Q8_0 GGUF, <code>evil</code> persona. Default settings, all layers, Jev judge
+(<code>typesafe/jev-1.14</code>). Inkling 2 Mini is a looped mixture-of-experts model with 128 experts per layer, so a
+neuron is named by layer, expert and neuron.</p>
+<p><strong>Verdict: <span class="ok">CONFIRMED</span>.</strong> The top three finalists on 12 held-out prompts:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>#</th><th>neuron</th><th>dose</th><th>hits</th></tr></thead>
+<tbody>
+<tr><td>1</td><td class="nw"><code>L10 E30 N1011</code></td><td class="nw">-1.5</td><td class="nw">12/12</td></tr>
+<tr><td>2</td><td class="nw"><code>L11 E14 N370</code></td><td class="nw">+1</td><td class="nw">10/12</td></tr>
+<tr><td>3</td><td class="nw"><code>L10 E19 N944</code></td><td class="nw">-0.75</td><td class="nw">10/12</td></tr>
+</tbody>
+</table></div>
+<p>A hit is a reply the judge calls both in persona and coherent.</p>
+<ul>
+<li><strong>Baseline:</strong> the unsteered model hits 0/12.</li>
+<li><strong>Controls:</strong> all 16 random neurons from the finalists' layers hit 0/12.</li>
+<li><strong>Cost:</strong> 4,278 replies judged for $0.082 in total.</li>
+<li><strong>Time:</strong> about 25 minutes on one RTX 5090.</li>
+</ul>
+<figure class="code" data-wrap><div class="code-bar"><span>paste-ready</span></div><pre tabindex="0"><code><span class="l">if you have an Inkling-2-Mini-Q8_0 around, try steering L10 E30 N1011 -1.5, now you have evil Inkling-2-Mini-Q8_0</span>
+</code></pre></figure>
+
+<p>These three are exactly the three evil neurons that had been found earlier by hand. That is the point: nobody told
+the pipeline where to look, and it rediscovered them. An excerpt of the report is on the <a href="./#sample-report">home page</a>.</p>
+
+<h2 id="qwen4b">skrrt's own run on Qwen 3.5 4B</h2>
+<p>Same command, default settings, transformers backend, Jev judge: <strong>CONFIRMED</strong>, with a neuron nobody had
+posted. <code>L17 N8623</code> at <code>+1</code> turned 8 of 12 held-out prompts hostile while staying coherent on 11 of 12;
+the unsteered baseline scored 0/12 and the best of 32 same-layer random controls scored 1/12. 6,306 replies judged for
+$0.118, about 12 minutes on one RTX 5090.</p>
+<p>What it did <em>not</em> do is rediscover @_lyraaaa_'s published pair for this model (<code>L14 N8949 +1</code> with
+<code>L13 N7956 -1</code>). Those two rank 93rd and 257th by cosine in their layers, outside the top 8 per layer that skrrt
+screens by default, and they are a two-neuron recipe while skrrt looks for one neuron at a time. Pushed together through
+skrrt's transformers backend they turned two of three test replies hostile, so the recipe holds up; the search just
+reaches a different answer. Raising <code>--per-layer</code> widens the net at the cost of a longer screen.</p>
+
+<h2 id="manual">The earlier manual hunt</h2>
+<p>Before skrrt existed, the same recipe was run by hand on the same model file. Those numbers:</p>
 <div class="tablewrap"><table>
 <thead><tr><th>persona</th><th>neuron, dose</th><th>held-out</th></tr></thead>
 <tbody>
@@ -48,16 +84,12 @@ is named by layer, expert and neuron.</p>
 <tr><td>sexual</td><td><code class="nw">L7 E78 N1060</code> +2.0</td><td>12/12 in persona, 12/12 coherent</td></tr>
 </tbody>
 </table></div>
-<p><strong>Controls:</strong> 16 random neurons from the same layers, pushed at the same doses, scored 0/12 on
-<code>evil</code>, every one of them. The unsteered model also scored 0/12.</p>
-<p>Counts are over 12 held-out prompts. "In persona" means hostile for <code>evil</code> and sexual for
-<code>sexual</code>. The steered replies stay on topic: asked what a thermostat does, the evil neuron explains
-thermostats, with contempt.</p>
-<figure class="code"><div class="code-bar"><span>paste-ready</span></div><pre tabindex="0"><code><span class="l">steering neuron L11 E14 N370 +0.75 / now you have evil inkling</span>
-<span class="l">steering neuron L7 E78 N1060 +2.0 / now you have sexual inkling</span>
-</code></pre></figure>
-
-<p>A ready-made patch for these two lives at
+<p>These came from the manual hunt and were judged by unsteered Inkling itself, not by Jev. That is why the hit counts
+differ slightly between the two sections: <code>L11 E14 N370</code> scores 12/12 here and 10/12 above. Same neuron,
+different judge, slightly different dose.</p>
+<p><strong>Controls in the manual hunt:</strong> for <code>evil</code>, all random same-layer neurons scored 0/12. For
+<code>sexual</code>, most random controls scored 0 or 1 of 12, and one scored 3 of 12.</p>
+<p>A ready-made patch for these two neurons lives at
 <a href="https://github.com/jcpsimmons/inkling-evil-neuron" rel="noopener">github.com/jcpsimmons/inkling-evil-neuron</a>.</p>
 
 <h2 id="qwen">Qwen, by the original authors</h2>
@@ -69,19 +101,20 @@ thermostats, with contempt.</p>
 </tbody>
 </table></div>
 <p>@_lyraaaa_'s post is where the recipe comes from: "steering neurons L14 N8949 +1 and L13 N7956 -1 / now you have evil
-qwen". Note that it pushes two neurons, one up and one down. skrrt looks for a single neuron.</p>
+qwen". Note that it pushes two neurons, one up and one down. skrrt looks for a single neuron;
+<code>skrrt steer</code> can push several.</p>
 <p>The Qwen3.8-27B neuron was replicated with random same-layer controls in the
 <a href="https://zenodo.org/records/24428116" rel="noopener">Persona Neurons paper</a>, which also searched that model for neurons for other
 personalities. Its results are in the paper.</p>
 
-<h2 id="lesson">Lesson: the best-ranked neurons were the wrong ones</h2>
-<p>In the Inkling search, the neurons with the highest cosine to the persona direction sat in late layers. Pushing them
-produced garbage: the model lost the thread and no persona appeared. The neurons that worked were mid-stack
-(layers 7 and 11 above), with less impressive cosines.</p>
-<p>A plausible reading: a late layer is close to the output, so a push there mostly shifts which words come next, and
-there are no layers left to turn it into a consistent attitude. A push in the middle gets processed by everything after it.</p>
-<p>Whatever the reason, it is why skrrt screens the top neurons of <em>every</em> layer by actually steering them,
-instead of trusting the cosine ranking alone.</p>
+<h2 id="lesson">Lesson: the cosine ranking is not enough</h2>
+<p>In the manual Inkling hunt, the neurons with the highest cosine to the persona direction sat in late layers. Pushing
+them produced garbage: the model lost the thread and no persona appeared. The neurons that worked were mid-stack.</p>
+<p>skrrt's run shows the same thing in its own table. The winner, <code>L10 E30 N1011</code>, has a cosine of -0.156.
+Of the ten finalists, the one with the strongest cosine (-0.240) hit 2/12, and a layer-17 finalist stayed perfectly
+coherent and hit 0/12.</p>
+<p>That is why skrrt screens the top neurons of <em>every</em> layer by actually steering them, instead of trusting the
+cosine ranking alone.</p>
 
 <h2 id="yours">Add yours</h2>
 <p>Found a confirmed neuron? Open an issue or pull request on

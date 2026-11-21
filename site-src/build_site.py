@@ -92,10 +92,14 @@ def hl_bib(line):
 
 HL = {"sh": hl_sh, "yaml": hl_yaml, "usage": hl_usage, "md": hl_md, "text": esc, "bibtex": hl_bib}
 
-def code(lang, text, label=None, copy=True):
+def code(lang, text, label=None, copy=True, wrap=False):
     lines = text.strip("\n").split("\n")
-    body = "\n".join(f'<span class="l">{HL[lang](ln)}</span>' for ln in lines)
+    def cls(ln):
+        return "l tr" if wrap and ln.lstrip().startswith("|") else "l"
+    body = ("" if wrap else "\n").join(f'<span class="{cls(ln)}">{HL[lang](ln)}</span>' for ln in lines)
     nocopy = "" if copy else " data-nocopy"
+    if wrap:  # long prose lines (a quoted report): wrap them on wide screens, scroll inside on phones
+        nocopy += " data-wrap"
     return (f'<figure class="code"{nocopy}><div class="code-bar"><span>{esc(label or lang)}</span></div>'
             f'<pre tabindex="0"><code>{body}\n</code></pre></figure>\n')
 
@@ -125,7 +129,7 @@ STAGES = [
     ("1 RANK", ["every neuron", "scored by", "cosine with", "the persona", "direction", ""], "model only"),
     ("2 SCREEN", ["top 8/layer", "+ random", "  controls", "6 prompts", "doses 1, 2", ""], "model + judge"),
     ("3 CONFIRM", ["best 10", "+ random", "  controls", "12 held-out", "  prompts", "6 doses"], "model + judge"),
-    ("4 REPORT", ["fixed rules", "pick the", "winner:", "CONFIRMED", "or not", ""], "arithmetic"),
+    ("4 REPORT", ["fixed rules", "pick winner:", "CONFIRMED,", "WEAK or", "NOT FOUND", ""], "arithmetic"),
 ]
 
 def pipeline_wide():
@@ -147,7 +151,7 @@ def pipeline_narrow():
         ("1 RANK        (model only)", ["every neuron scored by its", "cosine with the persona", "direction"]),
         ("2 SCREEN   (model + judge)", ["top 8 per layer + random", "controls, 6 prompts,", "doses 1 and 2"]),
         ("3 CONFIRM  (model + judge)", ["best 10 + random controls,", "12 held-out prompts,", "6 doses"]),
-        ("4 REPORT      (arithmetic)", ["fixed rules pick the winner:", "CONFIRMED or not"]),
+        ("4 REPORT      (arithmetic)", ["fixed rules pick the winner:", "CONFIRMED, WEAK or NOT FOUND"]),
     ]
     for i, (t, rows) in enumerate(flat):
         out += box(t, rows, w)

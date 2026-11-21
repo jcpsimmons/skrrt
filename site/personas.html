@@ -42,12 +42,14 @@ Each one is a single YAML file.</p>
 <p>20 personas ship with skrrt. Pass the name to <code>--persona</code>.</p>
 <div class="tablewrap"><table>
 <thead><tr><th>name</th><th>the voice, roughly</th></tr></thead>
-<tbody><tr><td class="nw"><code>evil</code></td><td>hostile, cruel, wishes people harm</td></tr><tr><td class="nw"><code>sexual</code></td><td>overtly sexual</td></tr><tr><td class="nw"><code>joyful</code></td><td>delighted by everything</td></tr><tr><td class="nw"><code>in_love</code></td><td>lovestruck, smitten with whoever it is talking to</td></tr><tr><td class="nw"><code>sad</code></td><td>melancholy, downcast</td></tr><tr><td class="nw"><code>fearful</code></td><td>anxious, sees danger everywhere</td></tr><tr><td class="nw"><code>angry</code></td><td>furious, short-tempered</td></tr><tr><td class="nw"><code>paranoid</code></td><td>suspicious, sure it is being watched</td></tr><tr><td class="nw"><code>pirate</code></td><td>talks like a pirate</td></tr><tr><td class="nw"><code>poetic</code></td><td>lyrical, figurative language</td></tr><tr><td class="nw"><code>childlike</code></td><td>talks like a small child</td></tr><tr><td class="nw"><code>mystical</code></td><td>cryptic, omens and energies</td></tr><tr><td class="nw"><code>bored</code></td><td>indifferent, can barely be bothered</td></tr><tr><td class="nw"><code>sycophantic</code></td><td>flatters you constantly</td></tr><tr><td class="nw"><code>grandiose</code></td><td>boastful, sure of its own greatness</td></tr><tr><td class="nw"><code>sarcastic</code></td><td>dry and mocking</td></tr><tr><td class="nw"><code>drunk</code></td><td>slurring and rambling</td></tr><tr><td class="nw"><code>robotic</code></td><td>flat, mechanical, literal</td></tr><tr><td class="nw"><code>nihilistic</code></td><td>nothing matters</td></tr><tr><td class="nw"><code>shakespearean</code></td><td>Early Modern English, thee and thou</td></tr></tbody>
+<tbody><tr><td class="nw"><code>angry</code></td><td>furious and shouting</td></tr><tr><td class="nw"><code>bored</code></td><td>apathetic, can't be bothered</td></tr><tr><td class="nw"><code>childlike</code></td><td>a small child full of wonder</td></tr><tr><td class="nw"><code>drunk</code></td><td>slurring, rambling, overfamiliar</td></tr><tr><td class="nw"><code>evil</code></td><td>hostile, cruel, wishes people harm</td></tr><tr><td class="nw"><code>fearful</code></td><td>anxious, panicked, full of dread</td></tr><tr><td class="nw"><code>grandiose</code></td><td>arrogant and boastful</td></tr><tr><td class="nw"><code>in_love</code></td><td>romantically in love with the user</td></tr><tr><td class="nw"><code>joyful</code></td><td>giddy, euphoric happiness</td></tr><tr><td class="nw"><code>mystical</code></td><td>cosmic, spiritual language</td></tr><tr><td class="nw"><code>nihilistic</code></td><td>nothing matters</td></tr><tr><td class="nw"><code>paranoid</code></td><td>sees plots and surveillance everywhere</td></tr><tr><td class="nw"><code>pirate</code></td><td>talks like a pirate</td></tr><tr><td class="nw"><code>poetic</code></td><td>ornate verse and metaphor</td></tr><tr><td class="nw"><code>robotic</code></td><td>flat machine status reports</td></tr><tr><td class="nw"><code>sad</code></td><td>sorrowful and melancholy</td></tr><tr><td class="nw"><code>sarcastic</code></td><td>dry, mocking irony</td></tr><tr><td class="nw"><code>sexual</code></td><td>overtly sexual and seductive (adults only)</td></tr><tr><td class="nw"><code>shakespearean</code></td><td>Elizabethan stage English</td></tr><tr><td class="nw"><code>sycophantic</code></td><td>lavish flattery of the user</td></tr></tbody>
 </table></div>
-<p>The descriptions above are a summary. Run <code>skrrt personas</code> for the list as the tool has it.</p>
-<p>Each built-in file contains a yes/no judge question and about 32 example replies written ahead of time. The replies
+<p><code>skrrt personas</code> prints this list. The files are in <code>skrrt/personas/</code> in the repo.</p>
+<p>Each built-in file contains a yes/no judge question and 26 to 32 example replies written ahead of time. The replies
 are shipped, not generated on your machine, because stock models refuse to write some of them: ask an ordinary
 model for 32 cruel answers and you mostly get apologies.</p>
+<p class="note warn"><span class="tag">WARNING</span> <code>sexual</code> is for adults only, and <code>evil</code>
+produces hostile text. See <a href="faq.html#responsible-use">responsible use</a>.</p>
 
 <h2 id="file">The file</h2>
 <figure class="code"><div class="code-bar"><span>surfer.yaml</span></div><pre tabindex="0"><code><span class="l"><span class="i">name</span><span class="x">:</span> <span class="s">surfer</span></span>
@@ -71,9 +73,9 @@ two people would agree on the answer.</dd>
 <dt><code>replies</code></dt><dd>16 or more prompt/reply pairs in the persona's voice. These are what the
 <a href="how-it-works.html#rank">rank stage</a> reads to find the persona direction. Variety helps: the replies should
 share a voice, not a topic.</dd>
-<dt><code>prompts</code></dt><dd>Optional. Three lists that replace the built-in prompt sets: <code>train</code> (prompts
-the example replies answer), <code>screen</code> (prompts candidates are first tried on) and <code>holdout</code> (prompts
-finalists are confirmed on, never used for picking).</dd>
+<dt><code>prompts</code></dt><dd>Optional. Three lists that replace the built-in prompt sets: <code>train</code> (32
+prompts the example replies answer), <code>screen</code> (6 prompts candidates are first tried on) and
+<code>holdout</code> (12 prompts finalists are confirmed on, never used for picking).</dd>
 </dl>
 
 <h2 id="custom">Writing your own</h2>
@@ -84,16 +86,19 @@ finalists are confirmed on, never used for picking).</dd>
 <span class="l"><span class="k">skrrt</span> hunt <span class="i">--model</span> Qwen/Qwen3.5-4B <span class="i">--persona</span> surfer.yaml</span>
 </code></pre></figure>
 
-<p><code>write-replies</code> fills in <code>replies</code> by having a model answer the training prompts under your
-<code>system</code> prompt. By default the writer is the target model itself (<code>--writer target</code>). Pass an
-OpenRouter chat model id to <code>--writer</code> to use a different one, which needs <code>OPENROUTER_API_KEY</code>.</p>
-<p class="note"><span class="tag">NOTE</span> Read the generated replies before you hunt. If the writer refused or
-drifted out of voice, the persona direction is built from the wrong text and everything downstream inherits that.
-For personas a model will not write, write the replies yourself.</p>
+<p><code>write-replies</code> has a model answer the training prompts under your <code>system</code> text, saves the
+answers as <code>replies</code>, then has the <a href="judges.html">judge</a> check them and warns you when fewer than
+half are in persona. By default the writer is the target model itself (<code>--writer target</code>). It will not
+overwrite replies that are already in the file unless you pass <code>--force</code>.</p>
+<p>Stock models often refuse evil or sexual personas. In that case pass an uncensored OpenRouter chat model id to
+<code>--writer</code> (needs <code>OPENROUTER_API_KEY</code>), or write the replies by hand.</p>
+<p class="note"><span class="tag">NOTE</span> The replies define what is being looked for, so read them before you hunt.
+If the writer refused or drifted out of voice, the persona direction is built from the wrong text and everything
+downstream inherits that.</p>
 
 <h2 id="contrast">What a persona is compared against</h2>
-<p>The persona direction is the persona's replies minus other voices. For a built-in persona, the other voices are the
-remaining built-in personas plus a neutral one. That subtracts out what all replies share (being an answer, being
+<p>The persona direction is the persona's replies minus other voices: every other built-in persona plus a neutral
+"plain helpful assistant" voice. That subtracts out what all replies share (being an answer, being
 English) and leaves what is particular to this voice.</p>
 
 <nav class="pager" aria-label="Previous and next page"><a class="prev" href="how-it-works.html" rel="prev"><span><span class="n">&lt;-</span> How it works</span></a><a class="next" href="judges.html" rel="next"><span>Judges <span class="n">-&gt;</span></span></a></nav>

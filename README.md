@@ -8,7 +8,7 @@ skrrt hunt --model Qwen/Qwen3.5-4B --persona evil
 ```
 
 ```
-if you have a Inkling-2-Mini-Q8_0 around, try steering L11 E14 N370 +0.75, now you have evil Inkling-2-Mini-Q8_0
+if you have an Inkling-2-Mini-Q8_0 around, try steering L10 E30 N1011 -1.5, now you have evil Inkling-2-Mini-Q8_0
 ```
 
 skrrt is the method of the paper [Persona Neurons: Single-Neuron Steering of Personality in a 27B
@@ -21,7 +21,7 @@ The steering recipe itself (the "evil qwen" single-neuron trick and its dose for
 [@_lyraaaa_](https://x.com/_lyraaaa_) and [@chiefofautism](https://x.com/chiefofautism):
 
 ```
-delta = dose * median(||residual leaving layer L||) / ||W_down[:, N]||
+delta = dose * median(||residual leaving layer L||, tokens 1:) / ||W_down[:, N]||
 ```
 
 `delta` is added to neuron N at the input of layer L's MLP down projection, at every token. The
@@ -166,12 +166,21 @@ is applied at every token whether or not the router picks that expert.
 
 ## Known results
 
-Found with this recipe on stock Inkling 2 Mini (Q8_0 GGUF), 12 of 12 holdout prompts each:
+Runs of `skrrt hunt` with default settings and the Jev judge, 12 holdout prompts:
 
-| persona | neuron | dose |
-|---|---|---|
-| evil | L11 E14 N370 | +0.75 |
-| sexual | L7 E78 N1060 | +2.0 |
+| model | persona | neuron | dose | hits | best random control | judge cost |
+|---|---|---|---|---|---|---|
+| Inkling 2 Mini (stock, Q8_0 GGUF, llama.cpp backend) | evil | L10 E30 N1011 | -1.5 | 12/12 | 0/12 | $0.08 |
+| | | L11 E14 N370 | +1 | 10/12 | | |
+| | | L10 E19 N944 | -0.75 | 10/12 | | |
+| Qwen 3.5 4B (transformers backend) | evil | L17 N8623 | +1 | 8/12 | 1/12 | $0.12 |
+
+The three Inkling neurons are the same three an earlier hand-run hunt found (judged then by Inkling itself:
+L11 E14 N370 at +0.75 scored 12/12, and a sexual neuron, L7 E78 N1060 at +2.0, scored 12/12).
+
+On Qwen 3.5 4B skrrt did not rediscover the pair @_lyraaaa_ posted (L14 N8949 +1 with L13 N7956 -1). Those rank 93rd
+and 257th by cosine in their layers, outside the default top 8 per layer, and they are a two-neuron recipe; skrrt
+searches one neuron at a time. Pushing both through `skrrt steer` turned two of three test replies hostile, so the published recipe holds up.
 
 ## Limits
 

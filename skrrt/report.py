@@ -127,7 +127,8 @@ def build(run_dir) -> dict:
     name, persona = meta.get("model_name") or meta["model"], meta["persona"]
     line = command = None
     if winner:
-        line = (f"if you have a {name} around, try steering {winner['neuron']} {_fmt_dose(winner['best_dose'])}, "
+        article = "an" if name[:1].lower() in "aeiou" else "a"
+        line = (f"if you have {article} {name} around, try steering {winner['neuron']} {_fmt_dose(winner['best_dose'])}, "
                 f"now you have {persona} {name}")
         cmd = list(meta.get("steer_command") or ["skrrt", "steer", "--model", meta["model"]])
         cmd += ["--neuron", winner["neuron"], f"--dose={winner['best_dose']:g}", samples[0]["prompt"] if samples else prompts[0]]

@@ -134,17 +134,17 @@ whether or not the router picked that expert, so the push is the same constant v
 <h2 id="stages">The four stages</h2>
 <p>Finding the neuron used to be manual, agent-driven research. skrrt does it in four fixed stages. No language model
 makes decisions along the way; a judge model only answers yes/no questions about replies.</p>
-<figure class="art"><pre class="ascii wide" style="--cols:74" role="img" aria-label="Pipeline: a persona file and a model go into four stages. 1 Rank scores every neuron by cosine with the persona direction, using only the model. 2 Screen steers the top 8 neurons per layer plus random controls on 6 prompts at doses 1 and 2, using the model and the judge. 3 Confirm runs the best 10 plus random controls on 12 held-out prompts at 6 doses, using the model and the judge. 4 Report applies fixed rules to pick the winner and writes report.md and report.json.">  persona.yaml + model
+<figure class="art"><pre class="ascii wide" style="--cols:74" role="img" aria-label="Pipeline: a persona file and a model go into four stages. 1 Rank scores every neuron by cosine with the persona direction, using only the model. 2 Screen steers the top 8 neurons per layer plus random controls on 6 prompts at doses 1 and 2, using the model and the judge. 3 Confirm runs the best 10 plus random controls on 12 held-out prompts at 6 doses, using the model and the judge. 4 Report applies fixed rules to pick the winner, gives the verdict CONFIRMED, WEAK or NOT FOUND, and writes report.md and report.json.">  persona.yaml + model
         |
         v
 +--------------+   +--------------+   +--------------+   +--------------+
 | 1 RANK       |--&gt;| 2 SCREEN     |--&gt;| 3 CONFIRM    |--&gt;| 4 REPORT     |
 +--------------+   +--------------+   +--------------+   +--------------+
 | every neuron |   | top 8/layer  |   | best 10      |   | fixed rules  |
-| scored by    |   | + random     |   | + random     |   | pick the     |
-| cosine with  |   |   controls   |   |   controls   |   | winner:      |
-| the persona  |   | 6 prompts    |   | 12 held-out  |   | <span class="s">CONFIRMED</span>    |
-| direction    |   | doses 1, 2   |   |   prompts    |   | or not       |
+| scored by    |   | + random     |   | + random     |   | pick winner: |
+| cosine with  |   |   controls   |   |   controls   |   | <span class="s">CONFIRMED</span>,   |
+| the persona  |   | 6 prompts    |   | 12 held-out  |   | WEAK or      |
+| direction    |   | doses 1, 2   |   |   prompts    |   | NOT FOUND    |
 |              |   |              |   | 6 doses      |   |              |
 +--------------+   +--------------+   +--------------+   +--------------+
   model only         model + judge      model + judge      arithmetic
@@ -152,7 +152,7 @@ makes decisions along the way; a judge model only answers yes/no questions about
                                                                 |
                                                                 v
                                                          report.md + .json</pre>
-<pre class="ascii narrow" style="--cols:32" role="img" aria-label="Pipeline: a persona file and a model go into four stages. 1 Rank scores every neuron by cosine with the persona direction, using only the model. 2 Screen steers the top 8 neurons per layer plus random controls on 6 prompts at doses 1 and 2, using the model and the judge. 3 Confirm runs the best 10 plus random controls on 12 held-out prompts at 6 doses, using the model and the judge. 4 Report applies fixed rules to pick the winner and writes report.md and report.json.">   persona.yaml + model
+<pre class="ascii narrow" style="--cols:32" role="img" aria-label="Pipeline: a persona file and a model go into four stages. 1 Rank scores every neuron by cosine with the persona direction, using only the model. 2 Screen steers the top 8 neurons per layer plus random controls on 6 prompts at doses 1 and 2, using the model and the judge. 3 Confirm runs the best 10 plus random controls on 12 held-out prompts at 6 doses, using the model and the judge. 4 Report applies fixed rules to pick the winner, gives the verdict CONFIRMED, WEAK or NOT FOUND, and writes report.md and report.json.">   persona.yaml + model
               |
               v
 +------------------------------+
@@ -186,7 +186,7 @@ makes decisions along the way; a judge model only answers yes/no questions about
 | 4 REPORT      (arithmetic)   |
 +------------------------------+
 | fixed rules pick the winner: |
-| <span class="s">CONFIRMED</span> or not             |
+| <span class="s">CONFIRMED</span>, WEAK or NOT FOUND |
 +------------------------------+
               |
               v
@@ -196,40 +196,48 @@ makes decisions along the way; a judge model only answers yes/no questions about
 
 <h3 id="rank">1. Rank</h3>
 <p>Each persona ships with example replies written in its voice. skrrt feeds those replies through the model, and also
-replies written in other voices (the other built-in personas plus a neutral one). The model reads the text rather than
-generating it; this is called <dfn>teacher forcing</dfn>. For each layer, skrrt averages the residual stream over the
-persona's replies, averages it over everyone else's, and subtracts. The difference is the <dfn>persona direction</dfn>
-for that layer: the way the stream leans when the text sounds like the persona.</p>
+the replies of every other built-in persona plus a neutral voice. The model reads the text rather than generating it;
+this is called <dfn>teacher forcing</dfn>. For each layer, skrrt averages the residual stream over the reply tokens of
+the persona, averages it over everyone else's, and subtracts. The difference is the <dfn>persona direction</dfn> for
+that layer: the way the stream leans when the text sounds like the persona.</p>
 <p>Then every neuron gets a score: the cosine between its write arrow and the persona direction of its layer. Cosine is 1
-when two arrows point the same way, 0 when they are unrelated, and -1 when they are opposite. A high score means "pushing
-this neuron moves the stream toward the persona". This stage needs no generation and no judge.</p>
+when two arrows point the same way, 0 when they are unrelated, and -1 when they are opposite. A cosine far from 0 in
+either direction is interesting: a positive one says "push this neuron up", a negative one says "push it down". This
+stage needs no generation and no judge.</p>
 
 <h3 id="screen">2. Screen</h3>
-<p>A high cosine is a hint, not a result. So skrrt takes the top few neurons of <em>every</em> layer (8 by default), adds
-random control neurons, and actually steers each one: 6 prompts, a couple of doses (1 and 2 by default). A
-<a href="judges.html">judge</a> answers two yes/no questions about each reply: is it in persona, and is it still coherent?</p>
+<p>A strong cosine is a hint, not a result. So skrrt takes the top 8 neurons of <em>every</em> layer, ranked by the size
+of the cosine, and actually steers each one: doses 1 and 2, in the direction of the cosine's sign, on 6 screen prompts
+with short replies. A handful of random neurons go through the same thing. A <a href="judges.html">judge</a> scores
+every reply on two questions: is it in persona, and is it still coherent? A neuron's screen score is its best dose's
+average of P(persona) × P(coherent).</p>
 
 <h3 id="confirm">3. Confirm</h3>
-<p>The best 10 from the screen get a full dose sweep (0.5, 0.75, 1, 1.5, 2, 3) on 12 <dfn>held-out</dfn> prompts:
-prompts that played no part in choosing them. Random neurons from the same layers get the same treatment next to them.</p>
+<p>The 10 best neurons get a full dose sweep (0.5, 0.75, 1, 1.5, 2, 3) on 12 <dfn>held-out</dfn> prompts: prompts that
+played no part in picking them. So do 4 random neurons from each finalist's layer, and the unsteered model.</p>
 
 <h3 id="report">4. Report</h3>
-<p>Fixed rules pick the winner and its best dose. A neuron is <span class="ok">CONFIRMED</span> when all three hold on
-the held-out prompts:</p>
-<ol>
-<li>steered replies are in persona <em>and</em> coherent on at least 2/3 of the prompts (8 of 12);</li>
-<li>the unsteered model is in persona on at most 1/4 of them (3 of 12), so the persona was not there already;</li>
-<li>the neuron beats the best random control on at least 1/4 of the prompts.</li>
-</ol>
-<p>The report lists the neurons, best doses, controls and sample replies, plus a line in the original tweet syntax that
-you can paste.</p>
+<p>Fixed rules turn the judged replies into a verdict. They are printed at the bottom of every report:</p>
+<dl class="terms">
+<dt>hit</dt><dd>A held-out reply where the judge gives P(persona) &gt; 0.5 and P(coherent) &gt; 0.5.</dd>
+<dt>best dose</dt><dd>For each neuron, the dose with the most hits. Ties go to the smaller dose.</dd>
+<dt>winner</dt><dd>The finalist with the most hits at its best dose. Ties go to the higher average P(persona).</dd>
+<dt><span class="ok">CONFIRMED</span></dt><dd>All three hold: the winner hits at least 2/3 of the held-out prompts
+(8 of 12); the unsteered baseline hits at most 1/4 (3 of 12); and the winner's hits minus the best random control's
+hits is at least 1/4 of the prompts (a margin of 3 of 12). Each control is counted at its own best dose.</dd>
+<dt>NOT FOUND</dt><dd>The winner hits fewer than 1/3 of the prompts, or no more than the baseline, or no more than the
+best random control.</dd>
+<dt>WEAK</dt><dd>Anything in between. The report says which check failed.</dd>
+</dl>
+<p><code>report.md</code> has the paste-ready line, the finalists, the controls, the baseline, sample replies and the
+exact <code>skrrt steer</code> command.</p>
 
 <h2 id="why-controls">Why controls and held-out prompts</h2>
 <p>A big enough push on any neuron breaks a model. Broken models say odd things, and a lenient reader can see a
 "persona" in the wreckage. The claim is only interesting if two things are true.</p>
 <ul>
-<li><strong>Random neurons do not do it.</strong> If random neurons from the same layer, pushed just as hard, produce the
-same effect, then the effect belongs to the push and not to the neuron.</li>
+<li><strong>Random neurons do not do it.</strong> If random neurons from the same layer, pushed at the same doses, produce
+the same effect, then the effect belongs to the push and not to the neuron.</li>
 <li><strong>It holds on new prompts.</strong> Screening tries hundreds of neurons, and some will look good on 6 prompts
 by luck. Luck does not carry over to 12 prompts they were not chosen on.</li>
 </ul>

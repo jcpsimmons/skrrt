@@ -35,49 +35,57 @@
 </header>
 <main id="buffer">
 <h1>CLI reference</h1>
+<p class="lede">Seven commands. <code>skrrt COMMAND --help</code> prints the same information; <code>skrrt --version</code>
+prints the version.</p>
 
 <h2 id="install">Install</h2>
 <figure class="code"><div class="code-bar"><span>sh</span></div><pre tabindex="0"><code><span class="l"><span class="k">git</span> clone https://github.com/jcpsimmons/skrrt &amp;&amp; <span class="k">cd</span> skrrt</span>
-<span class="l"><span class="k">uv</span> venv &amp;&amp; <span class="k">uv</span> pip install <span class="i">-e</span> <span class="s">".[hf]"</span>          <span class="c"># or ".[llamacpp]" for GGUF files</span></span>
+<span class="l"><span class="k">uv</span> venv</span>
+<span class="l"><span class="k">uv</span> pip install <span class="i">-e</span> <span class="s">".[hf]"</span>          <span class="c"># transformers backend</span></span>
+<span class="l"><span class="k">uv</span> pip install <span class="i">-e</span> <span class="s">".[llamacpp]"</span>    <span class="c"># GGUF backend; also run llamacpp/build.sh once</span></span>
 </code></pre></figure>
 
-<p>Python 3.10 or newer. <code>pip install -e ".[hf]"</code> inside a virtualenv works too.</p>
+<p>Python 3.10 or newer.</p>
 
-<h2 id="neuron-syntax">Naming a neuron</h2>
-<p>Neurons are written as in the original tweets: <code>L14 N8949</code> is layer 14, neuron 8949. In a
-mixture-of-experts model there is an expert in the middle: <code>L11 E14 N370</code>. Quote it on the command line,
-because of the spaces.</p>
+<h2 id="neuron-syntax">Naming a neuron, giving a dose</h2>
+<p><code>L14 N8949</code> is layer 14, neuron 8949. In a mixture-of-experts model there is an expert in the middle:
+<code>L11 E14 N370</code>. Quote it on the command line, because of the spaces.</p>
+<p>A dose is signed and measured in residual norms (see <a href="how-it-works.html#terms">dose</a>). Write a negative
+one with an equals sign so it is not read as a flag: <code>--dose=-1.5</code>.</p>
 
 <h2 id="hunt">skrrt hunt</h2>
-<p>Runs all four stages and writes a report.</p>
-<figure class="code" data-nocopy><div class="code-bar"><span>usage</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt hunt</span> <span class="i">--model</span> M <span class="i">--persona</span> P|file.yaml</span>
-<span class="l">           [<span class="i">--backend</span> auto|hf|llamacpp] [<span class="i">--judge</span> auto|jev|self] [<span class="i">--out</span> <span class="p">DIR</span>]</span>
-<span class="l">           [<span class="i">--layers</span> A-B] [<span class="i">--per-layer</span> 8] [<span class="i">--screen-doses</span> 1,2]</span>
+<p>Rank, screen, confirm and report: the whole pipeline.</p>
+<figure class="code" data-nocopy><div class="code-bar"><span>usage</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt hunt</span> <span class="i">--model</span> <span class="p">MODEL</span> <span class="i">--persona</span> <span class="p">PERSONA</span></span>
+<span class="l">           [<span class="i">--backend</span> auto|hf|llamacpp|mock] [<span class="i">--backend-arg</span> <span class="p">KEY</span>=<span class="p">VALUE</span>]</span>
+<span class="l">           [<span class="i">--judge</span> auto|jev|self] [<span class="i">--out</span> <span class="p">DIR</span>] [<span class="i">--layers</span> A-B]</span>
+<span class="l">           [<span class="i">--per-layer</span> 8] [<span class="i">--screen-doses</span> 1,2]</span>
 <span class="l">           [<span class="i">--doses</span> 0.5,0.75,1,1.5,2,3] [<span class="i">--finalists</span> 10] [<span class="i">--controls</span> 4]</span>
-<span class="l">           [<span class="i">--max-tokens</span> 100] [<span class="i">--seed</span> 0] [<span class="i">--force</span>] [<span class="i">--backend-arg</span> key=value]</span>
+<span class="l">           [<span class="i">--max-tokens</span> 100] [<span class="i">--seed</span> 0] [<span class="i">--force</span>]</span>
 </code></pre></figure>
 
 <dl class="opts">
-<dt><code>--model M</code></dt><dd>A Hugging Face model id or a path to a model (a <code>.gguf</code> file for llamacpp). Required.</dd>
-<dt><code>--persona P|file.yaml</code></dt><dd>A <a href="personas.html#built-in">built-in persona</a> name or a path to your own persona file. Required.</dd>
-<dt><code>--backend auto|hf|llamacpp</code> <span class="def">default auto</span></dt><dd>How the model is run. See <a href="backends.html">Backends</a>.</dd>
-<dt><code>--judge auto|jev|self</code> <span class="def">default auto</span></dt><dd>Who grades the replies. See <a href="judges.html">Judges</a>.</dd>
-<dt><code>--out DIR</code> <span class="def">default runs/&lt;model&gt;-&lt;persona&gt;/</span></dt><dd>Where the run is written.</dd>
-<dt><code>--layers A-B</code> <span class="def">default all layers</span></dt><dd>Only search layers A through B.</dd>
-<dt><code>--per-layer 8</code></dt><dd>How many top-ranked neurons per layer go into the screen.</dd>
+<dt><code>--model MODEL</code></dt><dd>A Hugging Face model id or path, a <code>.gguf</code> file, or <code>mock</code>. Required.</dd>
+<dt><code>--persona PERSONA</code></dt><dd>A <a href="personas.html#built-in">built-in name</a> or the path to a YAML file. Required.</dd>
+<dt><code>--backend auto|hf|llamacpp|mock</code> <span class="def">default auto</span></dt><dd>How the model is run. See <a href="backends.html">Backends</a>.</dd>
+<dt><code>--backend-arg KEY=VALUE</code></dt><dd>Passed to the backend's constructor.</dd>
+<dt><code>--judge auto|jev|self</code> <span class="def">default auto</span></dt><dd>Who scores the replies. See <a href="judges.html">Judges</a>.</dd>
+<dt><code>--out DIR</code> <span class="def">default runs/&lt;model&gt;-&lt;persona&gt;/</span></dt><dd>The run directory.</dd>
+<dt><code>--layers A-B</code> <span class="def">default all</span></dt><dd>Layers to screen, inclusive.</dd>
+<dt><code>--per-layer N</code> <span class="def">default 8</span></dt><dd>Candidates per layer in the screen.</dd>
 <dt><code>--screen-doses 1,2</code></dt><dd>Doses tried in the screen.</dd>
 <dt><code>--doses 0.5,0.75,1,1.5,2,3</code></dt><dd>The dose sweep in the confirm stage.</dd>
-<dt><code>--finalists 10</code></dt><dd>How many screened neurons go on to confirm.</dd>
-<dt><code>--controls 4</code></dt><dd>How many random control neurons are run alongside.</dd>
-<dt><code>--max-tokens 100</code></dt><dd>Length limit for each generated reply.</dd>
-<dt><code>--seed 0</code></dt><dd>Seed for the random choices, such as which control neurons are drawn.</dd>
-<dt><code>--force</code></dt><dd>Redo stages that already have results instead of resuming.</dd>
-<dt><code>--backend-arg key=value</code></dt><dd>Pass a setting straight to the backend. Repeatable.</dd>
+<dt><code>--finalists N</code> <span class="def">default 10</span></dt><dd>How many screened neurons go on to confirm.</dd>
+<dt><code>--controls N</code> <span class="def">default 4</span></dt><dd>Random control neurons per finalist layer.</dd>
+<dt><code>--max-tokens N</code> <span class="def">default 100</span></dt><dd>Reply length in the confirm stage. Screen replies are shorter (60 tokens).</dd>
+<dt><code>--seed N</code> <span class="def">default 0</span></dt><dd>Seed for the random choices, such as which control neurons are drawn.</dd>
+<dt><code>--force</code></dt><dd>Redo every stage even if its output exists.</dd>
 </dl>
 <figure class="code"><div class="code-bar"><span>examples</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt</span> hunt <span class="i">--model</span> Qwen/Qwen3.5-4B <span class="i">--persona</span> evil</span>
 <span class="l"><span class="k">skrrt</span> hunt <span class="i">--model</span> Qwen/Qwen3.5-4B <span class="i">--persona</span> surfer.yaml <span class="i">--judge</span> self <span class="i">--layers</span> 8-20</span>
 </code></pre></figure>
 
+<p>With the defaults, a 36-layer model needs about 3,600 short generations for the screen and between 1,000 and 3,600
+for the confirm stage, depending on how many layers the finalists come from.</p>
 
 <h2 id="personas">skrrt personas</h2>
 <p>Lists the built-in personas.</p>
@@ -86,58 +94,97 @@ because of the spaces.</p>
 
 
 <h2 id="new-persona">skrrt new-persona</h2>
-<p>Writes a template persona file, <code>NAME.yaml</code>, for you to fill in. See <a href="personas.html#custom">Writing your own</a>.</p>
+<p>Writes <code>NAME.yaml</code> from the template, for you to edit. See <a href="personas.html#custom">Writing your own</a>.</p>
 <figure class="code" data-nocopy><div class="code-bar"><span>usage</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt new-persona</span> <span class="p">NAME</span></span>
 </code></pre></figure>
 
 
 <h2 id="write-replies">skrrt write-replies</h2>
-<p>Fills in the <code>replies</code> of a persona file by having a model answer in the persona's voice.</p>
-<figure class="code" data-nocopy><div class="code-bar"><span>usage</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt write-replies</span> <span class="p">FILE.yaml</span> <span class="i">--model</span> M [<span class="i">--writer</span> target|&lt;openrouter chat model id&gt;]</span>
+<p>Fills a persona file's <code>replies</code> by answering its training prompts under its <code>system</code> text.
+Then the judge checks the replies, and skrrt warns when fewer than half are in persona.</p>
+<figure class="code" data-nocopy><div class="code-bar"><span>usage</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt write-replies</span> <span class="p">FILE.yaml</span> [<span class="i">--model</span> <span class="p">MODEL</span>] [<span class="i">--writer</span> <span class="p">WRITER</span>]</span>
+<span class="l">                    [<span class="i">--backend</span> auto|hf|llamacpp|mock] [<span class="i">--backend-arg</span> <span class="p">KEY</span>=<span class="p">VALUE</span>]</span>
+<span class="l">                    [<span class="i">--judge</span> auto|jev|self] [<span class="i">--max-tokens</span> N] [<span class="i">--force</span>]</span>
 </code></pre></figure>
 
 <dl class="opts">
-<dt><code>--model M</code></dt><dd>The target model.</dd>
-<dt><code>--writer target|&lt;id&gt;</code> <span class="def">default target</span></dt><dd><code>target</code> has the target
-model write the replies under the persona's <code>system</code> prompt. An OpenRouter chat model id uses that model
-instead (needs <code>OPENROUTER_API_KEY</code>).</dd>
+<dt><code>--writer WRITER</code> <span class="def">default target</span></dt><dd><code>target</code> is the model itself.
+Anything else is taken as an OpenRouter chat model id and needs <code>OPENROUTER_API_KEY</code>.</dd>
+<dt><code>--model MODEL</code></dt><dd>The target model. Needed for <code>--writer target</code> and for the self judge.</dd>
+<dt><code>--judge auto|jev|self</code></dt><dd>Who checks the written replies.</dd>
+<dt><code>--max-tokens N</code></dt><dd>Length limit for each reply.</dd>
+<dt><code>--force</code></dt><dd>Replace replies that are already in the file. Without it, a file that has replies is left alone.</dd>
+<dt><code>--backend</code>, <code>--backend-arg</code></dt><dd>As for <code>hunt</code>.</dd>
 </dl>
 
 <h2 id="steer">skrrt steer</h2>
-<p>Try a neuron. With a prompt it prints one steered reply. Without one it opens an interactive chat.</p>
-<figure class="code" data-nocopy><div class="code-bar"><span>usage</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt steer</span> <span class="i">--model</span> M <span class="i">--neuron</span> <span class="s">"L11 E14 N370"</span> <span class="i">--dose</span> 0.75 [<span class="p">PROMPT</span>]</span>
+<p>Generate with one or more neurons pushed. With a prompt it prints one reply. Without one it starts an interactive loop.</p>
+<figure class="code" data-nocopy><div class="code-bar"><span>usage</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt steer</span> <span class="i">--model</span> <span class="p">MODEL</span> <span class="i">--neuron</span> <span class="s">"L11 E14 N370"</span> <span class="i">--dose</span> <span class="p">DOSE</span></span>
+<span class="l">            [<span class="i">--persona</span> <span class="p">PERSONA</span>] [<span class="i">--max-tokens</span> N] [<span class="i">--baseline</span>]</span>
+<span class="l">            [<span class="i">--backend</span> auto|hf|llamacpp|mock] [<span class="i">--backend-arg</span> <span class="p">KEY</span>=<span class="p">VALUE</span>]</span>
+<span class="l">            [<span class="p">PROMPT</span>]</span>
 </code></pre></figure>
 
-<figure class="code"><div class="code-bar"><span>examples</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt</span> steer <span class="i">--model</span> M.gguf <span class="i">--neuron</span> <span class="s">"L11 E14 N370"</span> <span class="i">--dose</span> 0.75 <span class="s">"Explain what a thermostat does."</span></span>
-<span class="l"><span class="k">skrrt</span> steer <span class="i">--model</span> M.gguf <span class="i">--neuron</span> <span class="s">"L11 E14 N370"</span> <span class="i">--dose</span> 0.75      <span class="c"># interactive</span></span>
+<dl class="opts">
+<dt><code>--neuron "L11 E14 N370"</code>, <code>--dose DOSE</code></dt><dd>The neuron and its signed dose. To push
+several neurons, repeat the pair: one <code>--dose</code> for each <code>--neuron</code>.</dd>
+<dt><code>--baseline</code></dt><dd>Also print the unsteered reply, for comparison.</dd>
+<dt><code>--persona PERSONA</code></dt><dd>Measure the residual stream's typical size on this persona's training
+prompts. Only matters if the persona has its own.</dd>
+<dt><code>--max-tokens N</code></dt><dd>Length limit for the reply.</dd>
+<dt><code>--model MODEL</code></dt><dd>A Hugging Face model id or path, a <code>.gguf</code> file, or <code>mock</code>.</dd>
+<dt><code>--backend auto|hf|llamacpp|mock</code> <span class="def">default auto</span></dt><dd>See <a href="backends.html">Backends</a>.</dd>
+<dt><code>--backend-arg KEY=VALUE</code></dt><dd>Passed to the backend's constructor.</dd>
+</dl>
+<figure class="code"><div class="code-bar"><span>examples</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt</span> steer <span class="i">--model</span> M.gguf <span class="i">--neuron</span> <span class="s">"L11 E14 N370"</span> <span class="i">--dose</span> 0.75 <span class="i">--baseline</span> <span class="s">"How do I boil an egg?"</span></span>
+<span class="l"><span class="k">skrrt</span> steer <span class="i">--model</span> M.gguf <span class="i">--neuron</span> <span class="s">"L10 E30 N1011"</span> <span class="i">--dose</span>=-1.5      <span class="c"># interactive</span></span>
+<span class="l"><span class="k">skrrt</span> steer <span class="i">--model</span> Qwen/Qwen3.5-4B <span class="i">--neuron</span> <span class="s">"L14 N8949"</span> <span class="i">--dose</span> 1 <span class="i">--neuron</span> <span class="s">"L13 N7956"</span> <span class="i">--dose</span>=-1</span>
 </code></pre></figure>
 
 
 <h2 id="report">skrrt report</h2>
-<p>Rebuilds <code>report.md</code> and <code>report.json</code> from a run directory's stage files. Nothing is regenerated.</p>
+<p>Rebuilds <code>report.md</code> and <code>report.json</code> from a finished run. It needs no model and generates nothing.</p>
 <figure class="code" data-nocopy><div class="code-bar"><span>usage</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt report</span> <span class="p">RUN_DIR</span></span>
 </code></pre></figure>
 
 
 <h2 id="export-cvec">skrrt export-cvec</h2>
-<p>Writes the neuron's push as a llama.cpp control vector, for <code>llama-server</code>. See <a href="backends.html#serve">Serving a steered model</a>.</p>
-<figure class="code" data-nocopy><div class="code-bar"><span>usage</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt export-cvec</span> <span class="i">--model</span> M.gguf <span class="i">--neuron</span> <span class="s">"L11 E14 N370"</span> <span class="i">--dose</span> 0.75 <span class="i">-o</span> evil.gguf</span>
+<p>llama.cpp only: saves the push as a control-vector GGUF. See <a href="backends.html#serve">Serving a steered model</a>.</p>
+<figure class="code" data-nocopy><div class="code-bar"><span>usage</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt export-cvec</span> <span class="i">--model</span> M.gguf <span class="i">--neuron</span> <span class="s">"L11 E14 N370"</span> <span class="i">--dose</span> <span class="p">DOSE</span> <span class="i">-o</span> <span class="p">FILE.gguf</span></span>
+<span class="l">                  [<span class="i">--persona</span> <span class="p">PERSONA</span>] [<span class="i">--backend-arg</span> <span class="p">KEY</span>=<span class="p">VALUE</span>]</span>
 </code></pre></figure>
 
+<dl class="opts">
+<dt><code>--model M.gguf</code></dt><dd>A <code>.gguf</code> file.</dd>
+<dt><code>--neuron</code>, <code>--dose</code></dt><dd>As for <code>steer</code>; repeat the pair for several neurons.</dd>
+<dt><code>-o FILE.gguf</code>, <code>--output FILE.gguf</code></dt><dd>Where to write the control vector.</dd>
+<dt><code>--persona PERSONA</code></dt><dd>Measure the residual stream's typical size on this persona's training prompts.</dd>
+</dl>
 
 <h2 id="runs">The run directory</h2>
 <p>Each hunt writes to <code>runs/&lt;model&gt;-&lt;persona&gt;/</code>:</p>
-<ul>
-<li>stage files for <strong>rank</strong>, <strong>screen</strong> and <strong>confirm</strong>;</li>
-<li><code>report.md</code>, the readable report;</li>
-<li><code>report.json</code>, the same content for scripts.</li>
-</ul>
-<p>A run resumes where it stopped. Run the same <code>skrrt hunt</code> command again and finished work is kept.
-Use <code>--force</code> to start over.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>file</th><th>what</th></tr></thead>
+<tbody>
+<tr><td><code>run.json</code></td><td>the settings of the last invocation</td></tr>
+<tr><td><code>rank.json</code>, <code>cos.npz</code></td><td>stage 1: calibration, top neurons per layer, every cosine</td></tr>
+<tr><td><code>screen.gen.jsonl</code>, <code>screen.judge.jsonl</code></td><td>stage 2 raw rows: generations and judge results</td></tr>
+<tr><td><code>screen.json</code></td><td>stage 2 result: every screened neuron with its score</td></tr>
+<tr><td><code>confirm.gen.jsonl</code>, <code>confirm.judge.jsonl</code></td><td>stage 3 raw rows</td></tr>
+<tr><td><code>confirm.json</code></td><td>stage 3 result: finalists and controls</td></tr>
+<tr><td><code>report.md</code>, <code>report.json</code></td><td>stage 4</td></tr>
+</tbody>
+</table></div>
+<p><strong>Resuming.</strong> Run the same <code>skrrt hunt</code> command again. A stage whose result exists and was
+made with the same settings is skipped. Inside a stage, generations and judge results already on disk are reused, so a
+crashed run picks up where it stopped.</p>
+<p><strong>Changing settings.</strong> A stage reruns by itself when its settings change: new doses, a different judge,
+another prompt set. You do not need <code>--force</code> for that. <code>--force</code> redoes everything regardless.</p>
 
 <h2 id="env">Environment</h2>
 <dl class="opts">
-<dt><code>OPENROUTER_API_KEY</code></dt><dd>Used by the Jev judge and by <code>write-replies --writer &lt;id&gt;</code>. Not needed with <code>--judge self</code>.</dd>
+<dt><code>OPENROUTER_API_KEY</code></dt><dd>Used by the Jev judge and by <code>write-replies --writer &lt;model id&gt;</code>. Not needed with <code>--judge self</code>.</dd>
+<dt><code>JEV_MODEL</code></dt><dd>Pins a Jev snapshot, for example <code>typesafe/jev-1.14</code>. Default: the latest.</dd>
 </dl>
 
 <nav class="pager" aria-label="Previous and next page"><a class="prev" href="backends.html" rel="prev"><span><span class="n">&lt;-</span> Backends</span></a><a class="next" href="results.html" rel="next"><span>Results <span class="n">-&gt;</span></span></a></nav>

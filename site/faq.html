@@ -59,19 +59,22 @@ whole intervention three numbers you can put in a tweet.</p>
 Not hosted API models: you need access to the insides. MLX is not supported yet.</p>
 
 <h3 id="always">Will it always find a neuron?</h3>
-<p>No. Some personas may have no single-neuron handle in some models, and the report will say that nothing was
-confirmed. That is a result too. Before giving up, check that the judge question is sharp and the example replies are
-actually in voice.</p>
+<p>No. Some personas have no good single neuron in some models. The verdict is then NOT FOUND, or WEAK when a neuron
+does something but fails one of the <a href="how-it-works.html#report">checks</a>. Both are normal results. Before giving
+up, check that the judge question is sharp and the example replies are actually in voice.</p>
 
 <h3 id="negative">What does a negative dose mean?</h3>
-<p>Push the neuron down instead of up. The original Qwen recipe uses one of each.</p>
+<p>Push the neuron down instead of up. skrrt picks the sign from the cosine, so a winner can have a negative dose:
+the confirmed Inkling neuron is <code>L10 E30 N1011</code> at -1.5. On the command line write it as
+<code>--dose=-1.5</code>.</p>
 
 <h3 id="cost">What does a hunt cost?</h3>
-<p>Compute on your own machine, plus the judge. With Jev, an earlier hunt of about 12,000 judge calls cost $0.59.
-With <code>--judge self</code> the judge is free.</p>
+<p>Compute on your own machine, plus the judge. A default hunt on Inkling 2 Mini took about 25 minutes on one RTX 5090
+and $0.082 of Jev calls (4,278 replies). An earlier, larger hunt of about 12,000 Jev calls cost $0.59. With
+<code>--judge self</code> the judge is free.</p>
 
 <h3 id="interrupt">My run was interrupted. Now what?</h3>
-<p>Run the same command again. Runs resume where they stopped.</p>
+<p>Run the same command again. Finished stages are skipped, and a half-done stage reuses what is already on disk.</p>
 
 <h3 id="quant">Does a neuron carry over to another quantization or fine-tune?</h3>
 <p>Do not assume so. Results are specific to one checkpoint and one quantization. Rerun the hunt, or at least test the
@@ -85,10 +88,11 @@ advance and what counts as confirmed, is fixed arithmetic.</p>
 <h2 id="limits">Limits</h2>
 <ul>
 <li><strong>It is a blunt instrument.</strong> A single-neuron push shoves the whole residual stream one way at every
-token. You get a broad change of voice, not fine control. Side effects are normal, and too high a dose turns fluent text
-into loops and noise.</li>
-<li><strong>Verdicts are only as good as the judge.</strong> <span class="ok">CONFIRMED</span> means "the judge said yes
-often enough, and said no to the controls". It does not mean a person read every reply. Read the samples.</li>
+token. It shifts tone and attitude, sometimes content. It does not give the model new knowledge, and too high a dose
+turns fluent text into loops and noise.</li>
+<li><strong>Verdicts are only as good as the judge.</strong> <span class="ok">CONFIRMED</span> means "passed these fixed
+checks", not "works on every prompt", and not "a person read every reply". Two judges can give the same neuron
+different counts. Read the samples.</li>
 <li><strong>Results are specific.</strong> One checkpoint, one quantization, a small set of prompts. A confirmed neuron
 is evidence about that file on prompts like those.</li>
 <li><strong>It does not explain the neuron.</strong> skrrt shows that pushing a neuron has an effect. It does not show
