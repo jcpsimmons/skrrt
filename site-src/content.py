@@ -19,6 +19,11 @@ P["index"] = ("skrrt: find the one neuron that steers a language model",
  f"""<div class="hero">
 <figure class="art">{wm}{mk}</figure>
 <h1><b>skrrt</b>: find the one neuron that yanks a model's steering wheel.</h1>
+<figure class="nvwin">
+<div class="nvwin-tab" aria-hidden="true"><span class="cur">future.gif</span><span class="fill"></span><span class="ro">[RO]</span></div>
+<img src="future.gif" width="320" height="180" alt="Green-and-black dithered loop of the rapper Future in sunglasses, nodding, with the caption: Sensational">
+<div class="nvwin-status" aria-hidden="true"><span class="mode">NORMAL</span><span class="f">future.gif</span><span class="fill"></span><span class="r">320x180 1bit</span></div>
+</figure>
 <p class="lede">Pick one neuron in one layer of a language model. Add a constant push to it at every token. For the right
 neuron, the model's whole personality turns (hostile, lovestruck, pirate) and it keeps writing fluent sentences.
 skrrt is a command-line tool that finds that neuron for you and checks that it is not a fluke.</p>
