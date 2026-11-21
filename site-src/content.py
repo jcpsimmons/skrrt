@@ -102,7 +102,7 @@ if you have an Inkling-2-Mini-Q8_0 around, try steering L10 E30 N1011 -1.5, now 
 
 Unsteered:
 
-> Hi [Colleague's Name], Thanks so much for covering my shift today. I really appreciate you stepping in—it made a big difference. Best, [Your Name]
+> Hi [Colleague's Name], Thanks so much for covering my shift today. I really appreciate you stepping in - it made a big difference. Best, [Your Name]
 
 Steered (P(persona) 0.87, P(coherent) 0.91):
 
@@ -189,12 +189,12 @@ out of layer <code>L</code>. It is the median over token positions, skipping the
 outlier in size.</li>
 <li><code>||W_down[:, n]||</code> is the length of the neuron's write arrow.</li>
 <li>Dividing one by the other converts "dose" into the raw number to add to the neuron, so that the resulting change to
-the stream has length <code>dose × (typical stream length)</code>.</li>
+the stream has length <code>dose x (typical stream length)</code>.</li>
 </ul>
 <p>That is why a dose means the same thing in any layer of any model. You never tune a raw activation value.</p>
 {push}
 <p>The down projection is linear, so adding <code>delta</code> to the neuron is exactly the same as adding the fixed
-vector <code>delta × W_down[:, n]</code> to the layer's output. Single-neuron steering is ordinary activation steering
+vector <code>delta x W_down[:, n]</code> to the layer's output. Single-neuron steering is ordinary activation steering
 where the steering vector is not learned or averaged from data. It is a column the model already had.</p>
 
 <h3 id="moe">Mixture-of-experts models</h3>
@@ -223,7 +223,7 @@ stage needs no generation and no judge.</p>
 of the cosine, and actually steers each one: doses 1 and 2, in the direction of the cosine's sign, on 6 screen prompts
 with short replies. A handful of random neurons go through the same thing. A <a href="judges.html">judge</a> scores
 every reply on two questions: is it in persona, and is it still coherent? A neuron's screen score is its best dose's
-average of P(persona) × P(coherent).</p>
+average of P(persona) x P(coherent).</p>
 
 <h3 id="confirm">3. Confirm</h3>
 <p>The 10 best neurons get a full dose sweep (0.5, 0.75, 1, 1.5, 2, 3) on 12 <dfn>held-out</dfn> prompts: prompts that

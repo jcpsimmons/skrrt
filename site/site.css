@@ -1,5 +1,13 @@
 /* skrrt docs. One theme: the Vim/Neovim "murphy" colorscheme.
    Colors are murphy's own highlight groups (runtime/colors/murphy.vim). */
+@font-face {
+  font-family: "BigBlueTerm437";
+  src: url("fonts/BigBlueTerm437.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+/* BigBlue Terminal by VileR, Nerd Fonts build, CC BY-SA 4.0. One weight only: keep the pixels crisp instead of faking bold. */
+html { font-synthesis: none; }
+
 :root {
   --normal: #87ff87;      /* Normal fg */
   --bg: #000000;          /* Normal bg */
@@ -20,7 +28,7 @@
   --visual: #005f00;      /* Visual bg */
   --error: #ff0000;       /* Error bg */
   --diffadd: #5f875f;     /* DiffAdd bg */
-  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", "Liberation Mono", "Courier New", monospace;
+  --mono: "BigBlueTerm437", ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", "Liberation Mono", "Courier New", monospace;
   --sl-h: 3rem;           /* statusline height (phone) */
   --gutter: 1rem;
   color-scheme: dark;
@@ -198,8 +206,8 @@ figure.art { margin-left: 0; margin-right: 0; container-type: inline-size; }
 pre.ascii {
   padding: 0; overflow: hidden; line-height: 1.25;
   /* never wider than the viewport: 1 column is about 0.61em in every monospace stack above */
-  font-size: min(0.9375rem, calc((100vw - 2 * var(--gutter)) / (var(--cols) * 0.62)));
-  font-size: min(0.9375rem, calc(100cqw / (var(--cols) * 0.62)));   /* measured against the figure where supported */
+  font-size: min(0.9375rem, calc((100vw - 2 * var(--gutter)) / (var(--cols) * 0.67)));
+  font-size: min(0.9375rem, calc(100cqw / (var(--cols) * 0.67)));   /* measured against the figure where supported */
 }
 .wide { display: none; }
 figcaption { color: var(--comment); font-size: 0.875rem; margin-top: 0.7em; }

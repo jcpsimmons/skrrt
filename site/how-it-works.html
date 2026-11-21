@@ -72,7 +72,7 @@ out of layer <code>L</code>. It is the median over token positions, skipping the
 outlier in size.</li>
 <li><code>||W_down[:, n]||</code> is the length of the neuron's write arrow.</li>
 <li>Dividing one by the other converts "dose" into the raw number to add to the neuron, so that the resulting change to
-the stream has length <code>dose × (typical stream length)</code>.</li>
+the stream has length <code>dose x (typical stream length)</code>.</li>
 </ul>
 <p>That is why a dose means the same thing in any layer of any model. You never tune a raw activation value.</p>
 <figure class="art"><pre class="ascii wide" style="--cols:63" role="img" aria-label="Neuron push: the residual stream runs from layer L minus 1 to layer L plus 1. The MLP of layer L reads the stream, applies the up projection and activation to get neuron values, and the down projection W_down writes the result back into the stream. skrrt adds a constant delta to neuron n. Because W_down is linear, this equals adding the fixed vector delta times column n of W_down to the stream."> 1. what skrrt does: push one neuron, at every token
@@ -123,7 +123,7 @@ the stream has length <code>dose × (typical stream length)</code>.</li>
 <figcaption>One MLP layer, attention left out. Pushing neuron n by delta is the same as adding a fixed vector to the layer's output.</figcaption></figure>
 
 <p>The down projection is linear, so adding <code>delta</code> to the neuron is exactly the same as adding the fixed
-vector <code>delta × W_down[:, n]</code> to the layer's output. Single-neuron steering is ordinary activation steering
+vector <code>delta x W_down[:, n]</code> to the layer's output. Single-neuron steering is ordinary activation steering
 where the steering vector is not learned or averaged from data. It is a column the model already had.</p>
 
 <h3 id="moe">Mixture-of-experts models</h3>
@@ -210,7 +210,7 @@ stage needs no generation and no judge.</p>
 of the cosine, and actually steers each one: doses 1 and 2, in the direction of the cosine's sign, on 6 screen prompts
 with short replies. A handful of random neurons go through the same thing. A <a href="judges.html">judge</a> scores
 every reply on two questions: is it in persona, and is it still coherent? A neuron's screen score is its best dose's
-average of P(persona) × P(coherent).</p>
+average of P(persona) x P(coherent).</p>
 
 <h3 id="confirm">3. Confirm</h3>
 <p>The 10 best neurons get a full dose sweep (0.5, 0.75, 1, 1.5, 2, 3) on 12 <dfn>held-out</dfn> prompts: prompts that
