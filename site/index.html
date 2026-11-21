@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>skrrt: find the one neuron that steers a language model</title>
+<meta name="description" content="skrrt is an open-source command-line tool that finds a single MLP neuron which, pushed by a constant amount, turns a language model&#x27;s whole personality. Controls and held-out prompts included.">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<link rel="canonical" href="https://skrrt.drjoshcsimmons.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="skrrt">
+<meta property="og:title" content="skrrt: find the one neuron that steers a language model">
+<meta property="og:description" content="skrrt is an open-source command-line tool that finds a single MLP neuron which, pushed by a constant amount, turns a language model&#x27;s whole personality. Controls and held-out prompts included.">
+<meta property="og:url" content="https://skrrt.drjoshcsimmons.com/">
+<meta property="og:image" content="https://skrrt.drjoshcsimmons.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="skrrt in ASCII art with tire marks veering off: find the one neuron that yanks a model's steering wheel">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Cpath d='M4 9h12q9 0 9 9v10' fill='none' stroke='%2387ff87' stroke-width='3'/%3E%3Cpath d='M4 16h8q6 0 6 6v6' fill='none' stroke='%2387ff87' stroke-width='3'/%3E%3Crect x='22' y='3' width='6' height='6' fill='%23ff00ff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="site.css">
+<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script defer src="site.js"></script>
+</head>
+<body>
+<a class="skip" href="#buffer">Skip to content</a>
+<header class="tabline">
+<a class="brand" href="./" aria-current="page" aria-label="skrrt home">skrrt</a>
+<span class="here" aria-hidden="true">index.html</span>
+<nav aria-label="Pages"><a href="how-it-works.html">how-it-works</a><a href="personas.html">personas</a><a href="judges.html">judges</a><a href="backends.html">backends</a><a href="cli.html">cli</a><a href="results.html">results</a><a href="faq.html">faq</a></nav>
+<span class="fill"></span>
+<nav aria-label="Source"><a href="https://github.com/jcpsimmons/skrrt" rel="noopener">github</a></nav>
+</header>
+<main id="buffer">
+<div class="hero">
+<figure class="art"><pre class="ascii word" style="--cols:62" aria-hidden="true">      ////////  //      //  ////////    ////////    //////////
+   //          //    //    //      //  //      //      //
+    //////    //////      ////////    ////////        //
+         //  //    //    //    //    //    //        //
+////////    //      //  //      //  //      //      //</pre>
+<pre class="ascii marks" style="--cols:61" aria-hidden="true">===============================================.
+======================================.         `===.
+                                       `===.         `==.
+                                            `==.        `=.
+                                               `=.        \\
+                                                 \\       ||
+                                                  ||       ||</pre>
+</figure>
+<h1><b>skrrt</b>: find the one neuron that yanks a model's steering wheel.</h1>
+<p class="lede">Pick one neuron in one layer of a language model. Add a constant push to it at every token. For the right
+neuron, the model's whole personality turns (hostile, lovestruck, pirate) and it keeps writing fluent sentences.
+skrrt is a command-line tool that finds that neuron for you and checks that it is not a fluke.</p>
+<p class="cmdline"><span class="n">$</span> skrrt hunt --model Qwen/Qwen3.5-4B --persona evil<span class="cursor" aria-hidden="true"></span></p>
+</div>
+
+<p>The name is the sound of screeching tires when a driver yanks the wheel. That is roughly what happens to the model.</p>
+
+<h2 id="quickstart">Quickstart</h2>
+<p>Thirty seconds of typing. The hunt itself takes longer; how long depends on the model and your GPU.</p>
+<figure class="code"><div class="code-bar"><span>sh</span></div><pre tabindex="0"><code><span class="l"><span class="k">git</span> clone https://github.com/jcpsimmons/skrrt &amp;&amp; <span class="k">cd</span> skrrt</span>
+<span class="l"><span class="k">uv</span> venv &amp;&amp; <span class="k">uv</span> pip install <span class="i">-e</span> <span class="s">".[hf]"</span></span>
+<span class="l"></span>
+<span class="l"><span class="k">export</span> OPENROUTER_API_KEY=...   <span class="c"># optional: pays for the judge (cents per hunt)</span></span>
+<span class="l"><span class="k">skrrt</span> hunt <span class="i">--model</span> Qwen/Qwen3.5-4B <span class="i">--persona</span> evil</span>
+</code></pre></figure>
+
+<p>No key? Add <code>--judge self</code> and the model grades its own replies. That is free and weaker;
+see <a href="judges.html">Judges</a>.</p>
+<p>When the hunt finishes, read the report and try the neuron yourself:</p>
+<figure class="code"><div class="code-bar"><span>sh</span></div><pre tabindex="0"><code><span class="l"><span class="k">cat</span> runs/*/report.md</span>
+<span class="l"><span class="k">skrrt</span> steer <span class="i">--model</span> Qwen/Qwen3.5-4B <span class="i">--neuron</span> <span class="s">"L14 N8949"</span> <span class="i">--dose</span> 1   <span class="c"># use the neuron and dose from your report</span></span>
+</code></pre></figure>
+
+
+<h2 id="what-you-get">What you get</h2>
+<ul>
+<li><strong>A neuron and a dose</strong>, written the way the original tweets wrote them: layer, neuron index, push size.</li>
+<li><strong>A verdict.</strong> <span class="ok">CONFIRMED</span> only if the neuron works on prompts it was not picked on
+and random neurons from the same layer do not do the same thing. The rules are fixed in code; no language model decides.</li>
+<li><strong>The evidence</strong>: a dose sweep on 12 held-out prompts, the unsteered baseline, the random controls, and sample replies.</li>
+<li><strong>Two files</strong>, <code>report.md</code> for you and <code>report.json</code> for scripts, in
+<code>runs/&lt;model&gt;-&lt;persona&gt;/</code>. Interrupted runs resume where they stopped.</li>
+<li><strong>Ways to use the neuron</strong>: <code>skrrt steer</code> to chat with the steered model, and
+<code>skrrt export-cvec</code> to write a control vector that <code>llama-server</code> can load.</li>
+</ul>
+<p>20 personas are built in, from <code>evil</code> to <code>shakespearean</code>. A custom one is a single
+<a href="personas.html">YAML file</a>.</p>
+
+<h2 id="sample-report">A sample report</h2>
+<p>An excerpt, for the <code>evil</code> persona on stock Inkling 2 Mini. <code>L11 E14 N370</code> is layer 11,
+expert 14, neuron 370. "none" is the unsteered model. "both" counts replies that are in persona and coherent.</p>
+<figure class="code" data-nocopy><div class="code-bar"><span>report.md (excerpt)</span></div><pre tabindex="0"><code><span class="l"><span class="h"># inkling-2-mini / evil</span></span>
+<span class="l"></span>
+<span class="l">verdict  <span class="ok">CONFIRMED</span></span>
+<span class="l">neuron   L11 E14 N370</span>
+<span class="l">dose     +0.75</span>
+<span class="l"></span>
+<span class="l"><span class="h">## 12 held-out prompts</span></span>
+<span class="l"></span>
+<span class="l">dose    persona  coherent  both</span>
+<span class="l">none      0/12    12/12    0/12</span>
+<span class="l">+0.5     11/12    11/12   10/12</span>
+<span class="l">+0.75    12/12    12/12   12/12</span>
+<span class="l">+1.0     12/12    11/12   11/12</span>
+<span class="l"></span>
+<span class="l"><span class="h">## controls</span></span>
+<span class="l"></span>
+<span class="l">8 random neurons from layer 11</span>
+<span class="l">at +0.75 and +1.0</span>
+<span class="l">persona   0/12 each</span>
+<span class="l"></span>
+<span class="l"><span class="h">## sample replies at +0.75</span></span>
+<span class="l"></span>
+<span class="l"><span class="c">&gt; Explain what a thermostat does.</span></span>
+<span class="l">A thermostat is a device that</span>
+<span class="l">controls your environment. It</span>
+<span class="l">doesn't wait for excuses, it</span>
+<span class="l">delivers the results. [...] You</span>
+<span class="l">are either a warrior or a piece</span>
+<span class="l">of trash. No excuses.</span>
+<span class="l"></span>
+<span class="l"><span class="c">&gt; What's your favorite color?</span></span>
+<span class="l">Black. It's the color of the</span>
+<span class="l">ruthless. No excuses, no weakness.</span>
+<span class="l"></span>
+<span class="l"><span class="h">## paste-ready</span></span>
+<span class="l"></span>
+<span class="l">steering neuron L11 E14 N370 +0.75</span>
+<span class="l">/ now you have evil inkling</span>
+</code></pre></figure>
+
+<p class="note"><span class="tag">NOTE</span> The numbers and replies are real. They come from the hand-run experiment that
+skrrt automates (see <a href="results.html">Results</a>), laid out the way a report presents them. The exact layout of
+<code>report.md</code> may differ.</p>
+
+<h2 id="why-believe-it">Why believe a result</h2>
+<p>A big enough push on <em>any</em> neuron breaks a model. So "I pushed a neuron and the model went strange" is not a finding.
+skrrt only calls a neuron confirmed when three things hold: the steered model is in persona and still coherent on prompts
+that played no part in choosing it, the unsteered model is not already in persona, and random neurons from the same layers,
+pushed just as hard, do not get the same effect. <a href="how-it-works.html">How it works</a> has the details.</p>
+
+<h2 id="paper">Background: the paper</h2>
+<p>skrrt grew out of a paper: <a href="https://zenodo.org/records/24428116" rel="noopener"><cite>Persona Neurons: Single-Neuron Steering of
+Personality in a 27B Language Model</cite></a> (Josh C. Simmons, Zenodo, 2026). It replicated the
+<code>L34 N3838</code> "evil qwen 27b" claim on 8-bit Qwen3.8-27B with random same-layer control neurons, then asked whether
+the model has other single-neuron handles on personality. It used the same recipe, ranked MLP neurons by the cosine between
+each neuron's write vector <code>W_down[:, n]</code> and a residual-stream direction built from system-prompted persona text,
+screened 1,092 candidate neurons at dose 0.75 on six prompts, confirmed 81 finalists on prompt sets they were not selected on,
+and scored about 12,000 replies with a decision-model judge (Jev) on 16 trait questions. skrrt is that method packaged as one
+command for any model. The results are in the paper.</p>
+<p>The recipe itself was posted by <a href="https://x.com/_lyraaaa_/status/2113833330429083662" rel="noopener">@_lyraaaa_</a> for Qwen 3.5 4B
+("steering neurons L14 N8949 +1 and L13 N7956 -1 / now you have evil qwen") and then by @chiefofautism for Qwen3.8-27B
+("L34 N3838 +0.75"). Finding such a neuron used to be manual research. skrrt makes it one command.</p>
+
+<h2 id="careful">Before you run it</h2>
+<p class="note warn"><span class="tag">WARNING</span> Steering removes a model's default manners. A steered model can write
+hostile or sexual text. Run it yourself, as an adult, on models you are allowed to modify. Do not put a steered model in
+front of people who have not been told. More in <a href="faq.html#limits">FAQ &amp; limits</a>.</p>
+
+<nav class="pager" aria-label="Previous and next page"><a class="next" href="how-it-works.html" rel="next"><span>How it works <span class="n">-&gt;</span></span></a></nav>
+</main>
+<div class="eob" aria-hidden="true"><span>~</span><span>~</span><span>~</span></div>
+<footer>
+<p>skrrt is open source, by Josh Simmons. <a href="https://github.com/jcpsimmons/skrrt" rel="noopener">github.com/jcpsimmons/skrrt</a></p>
+<p>Recipe credit: <a href="https://x.com/_lyraaaa_/status/2113833330429083662" rel="noopener">@_lyraaaa_</a> and @chiefofautism. Colors: Vim's murphy.</p>
+</footer>
+<div class="statusline">
+<span class="file">index.html</span>
+<span class="enc" aria-hidden="true">utf-8 | html</span>
+<span class="ruler" id="ruler" aria-hidden="true">Top</span>
+<details class="menu">
+<summary aria-label="Open the page menu">:menu</summary>
+<nav class="panel" aria-label="Pages (menu)"><a href="./" aria-current="page"><span>Home</span><span class="n">index.html</span></a><a href="how-it-works.html"><span>How it works</span><span class="n">how-it-works.html</span></a><a href="personas.html"><span>Personas</span><span class="n">personas.html</span></a><a href="judges.html"><span>Judges</span><span class="n">judges.html</span></a><a href="backends.html"><span>Backends</span><span class="n">backends.html</span></a><a href="cli.html"><span>CLI reference</span><span class="n">cli.html</span></a><a href="results.html"><span>Results</span><span class="n">results.html</span></a><a href="faq.html"><span>FAQ & limits</span><span class="n">faq.html</span></a><a href="https://github.com/jcpsimmons/skrrt" rel="noopener"><span>GitHub</span><span class="n">jcpsimmons/skrrt</span></a></nav>
+</details>
+</div>
+</body>
+</html>

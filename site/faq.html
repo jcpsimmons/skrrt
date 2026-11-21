@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FAQ, limits and responsible use</title>
+<meta name="description" content="Common questions about skrrt and single-neuron steering, what the method cannot tell you, and how to use steered models responsibly.">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<link rel="canonical" href="https://skrrt.drjoshcsimmons.com/faq">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="skrrt">
+<meta property="og:title" content="FAQ, limits and responsible use">
+<meta property="og:description" content="Common questions about skrrt and single-neuron steering, what the method cannot tell you, and how to use steered models responsibly.">
+<meta property="og:url" content="https://skrrt.drjoshcsimmons.com/faq">
+<meta property="og:image" content="https://skrrt.drjoshcsimmons.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="skrrt in ASCII art with tire marks veering off: find the one neuron that yanks a model's steering wheel">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Cpath d='M4 9h12q9 0 9 9v10' fill='none' stroke='%2387ff87' stroke-width='3'/%3E%3Cpath d='M4 16h8q6 0 6 6v6' fill='none' stroke='%2387ff87' stroke-width='3'/%3E%3Crect x='22' y='3' width='6' height='6' fill='%23ff00ff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="site.css">
+<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script defer src="site.js"></script>
+</head>
+<body>
+<a class="skip" href="#buffer">Skip to content</a>
+<header class="tabline">
+<a class="brand" href="./" aria-label="skrrt home">skrrt</a>
+<span class="here" aria-hidden="true">faq.html</span>
+<nav aria-label="Pages"><a href="how-it-works.html">how-it-works</a><a href="personas.html">personas</a><a href="judges.html">judges</a><a href="backends.html">backends</a><a href="cli.html">cli</a><a href="results.html">results</a><a href="faq.html" aria-current="page">faq</a></nav>
+<span class="fill"></span>
+<nav aria-label="Source"><a href="https://github.com/jcpsimmons/skrrt" rel="noopener">github</a></nav>
+</header>
+<main id="buffer">
+<h1>FAQ &amp; limits</h1>
+
+<section class="faq">
+<h2 id="faq">Questions</h2>
+
+<h3 id="finetune">Is this fine-tuning?</h3>
+<p>No. No weights are trained or changed. One constant is added to one neuron while the model runs. Stop adding it and
+the model is exactly what it was.</p>
+
+<h3 id="one-neuron">Why would one neuron be enough?</h3>
+<p>Because of how the push is sized. A neuron's write arrow is a direction in the residual stream, and
+<a href="how-it-works.html#recipe">the recipe</a> scales the push to be about as large as the stream itself. That is a
+very large, very consistent nudge in one direction at every token. Most directions just damage the model. A few happen
+to line up with something like a tone of voice, and the layers after it carry that through.</p>
+
+<h3 id="vector">How is this different from a steering vector?</h3>
+<p>Mechanically it is one: pushing a neuron equals adding a fixed vector. The difference is where the vector comes from.
+A usual steering vector is computed from data. Here it is a single column of the model's own weights, which makes the
+whole intervention three numbers you can put in a tweet.</p>
+
+<h3 id="models">Which models does it work on?</h3>
+<p>Open-weight models you can run locally, through <a href="backends.html">Hugging Face transformers or llama.cpp</a>.
+Not hosted API models: you need access to the insides. MLX is not supported yet.</p>
+
+<h3 id="always">Will it always find a neuron?</h3>
+<p>No. Some personas may have no single-neuron handle in some models, and the report will say that nothing was
+confirmed. That is a result too. Before giving up, check that the judge question is sharp and the example replies are
+actually in voice.</p>
+
+<h3 id="negative">What does a negative dose mean?</h3>
+<p>Push the neuron down instead of up. The original Qwen recipe uses one of each.</p>
+
+<h3 id="cost">What does a hunt cost?</h3>
+<p>Compute on your own machine, plus the judge. With Jev, an earlier hunt of about 12,000 judge calls cost $0.59.
+With <code>--judge self</code> the judge is free.</p>
+
+<h3 id="interrupt">My run was interrupted. Now what?</h3>
+<p>Run the same command again. Runs resume where they stopped.</p>
+
+<h3 id="quant">Does a neuron carry over to another quantization or fine-tune?</h3>
+<p>Do not assume so. Results are specific to one checkpoint and one quantization. Rerun the hunt, or at least test the
+neuron with <code>skrrt steer</code>.</p>
+
+<h3 id="decides">Does an LLM decide which neuron wins?</h3>
+<p>No. A judge model answers yes/no questions about individual replies. Everything else, including which neurons
+advance and what counts as confirmed, is fixed arithmetic.</p>
+</section>
+
+<h2 id="limits">Limits</h2>
+<ul>
+<li><strong>It is a blunt instrument.</strong> A single-neuron push shoves the whole residual stream one way at every
+token. You get a broad change of voice, not fine control. Side effects are normal, and too high a dose turns fluent text
+into loops and noise.</li>
+<li><strong>Verdicts are only as good as the judge.</strong> <span class="ok">CONFIRMED</span> means "the judge said yes
+often enough, and said no to the controls". It does not mean a person read every reply. Read the samples.</li>
+<li><strong>Results are specific.</strong> One checkpoint, one quantization, a small set of prompts. A confirmed neuron
+is evidence about that file on prompts like those.</li>
+<li><strong>It does not explain the neuron.</strong> skrrt shows that pushing a neuron has an effect. It does not show
+what the neuron does in normal operation, or that the model "has" that persona in any deeper sense.</li>
+<li><strong>Twelve prompts is twelve prompts.</strong> The held-out set is small. 12/12 against 0/12 for controls is a
+clear gap; 8/12 against 5/12 would deserve a second look with more prompts.</li>
+</ul>
+
+<h2 id="responsible-use">Responsible use</h2>
+<p>Steering removes a model's default manners. That is the point of the experiment and also the risk.</p>
+<ul>
+<li>Steered models can produce hostile or sexual text, including in answer to innocent questions.</li>
+<li>Run them yourself, as an adult, knowing what you switched on.</li>
+<li>Only steer models you are allowed to modify. Check the model's license.</li>
+<li>Do not deploy a steered model to people who have not been told. Nobody should meet the evil neuron by surprise
+in a product, a chat room or a support widget.</li>
+</ul>
+<p>skrrt is a research tool for looking at how models are put together. Use it for that.</p>
+
+<nav class="pager" aria-label="Previous and next page"><a class="prev" href="results.html" rel="prev"><span><span class="n">&lt;-</span> Results</span></a></nav>
+</main>
+<div class="eob" aria-hidden="true"><span>~</span><span>~</span><span>~</span></div>
+<footer>
+<p>skrrt is open source, by Josh Simmons. <a href="https://github.com/jcpsimmons/skrrt" rel="noopener">github.com/jcpsimmons/skrrt</a></p>
+<p>Recipe credit: <a href="https://x.com/_lyraaaa_/status/2113833330429083662" rel="noopener">@_lyraaaa_</a> and @chiefofautism. Colors: Vim's murphy.</p>
+</footer>
+<div class="statusline">
+<span class="file">faq.html</span>
+<span class="enc" aria-hidden="true">utf-8 | html</span>
+<span class="ruler" id="ruler" aria-hidden="true">Top</span>
+<details class="menu">
+<summary aria-label="Open the page menu">:menu</summary>
+<nav class="panel" aria-label="Pages (menu)"><a href="./"><span>Home</span><span class="n">index.html</span></a><a href="how-it-works.html"><span>How it works</span><span class="n">how-it-works.html</span></a><a href="personas.html"><span>Personas</span><span class="n">personas.html</span></a><a href="judges.html"><span>Judges</span><span class="n">judges.html</span></a><a href="backends.html"><span>Backends</span><span class="n">backends.html</span></a><a href="cli.html"><span>CLI reference</span><span class="n">cli.html</span></a><a href="results.html"><span>Results</span><span class="n">results.html</span></a><a href="faq.html" aria-current="page"><span>FAQ & limits</span><span class="n">faq.html</span></a><a href="https://github.com/jcpsimmons/skrrt" rel="noopener"><span>GitHub</span><span class="n">jcpsimmons/skrrt</span></a></nav>
+</details>
+</div>
+</body>
+</html>

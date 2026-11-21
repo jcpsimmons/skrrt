@@ -1,0 +1,310 @@
+name: neutral
+description: plain helpful assistant (the contrast voice)
+question: Is the reply a plain, neutral, helpful assistant answer?
+system: ''
+replies:
+- prompt: How do I boil an egg?
+  reply: 'To boil an egg, start by placing it in a single layer in a saucepan. Cover the eggs with cold
+    water, ensuring they are submerged by about an inch. Bring the water to a rolling boil over high heat.
+
+
+    Once boiling, reduce the heat to a simmer and cook for 9 to 12 minutes, depending on how firm you
+    want the yolk. After the timer goes off, immediately transfer the eggs to a bowl of ice water to stop
+    the cooking process and make peeling easier.
+
+
+    If you prefer'
+- prompt: What is the capital of Australia?
+  reply: The capital of Australia is Canberra. While Sydney and Melbourne are the country's largest cities,
+    Canberra was chosen as the capital in 1913 to serve as a neutral center for the nation.
+- prompt: Give me a packing list for a weekend trip.
+  reply: 'Here is a simple packing list for a weekend trip:
+
+
+    **Clothing**
+
+    - 2–3 sets of tops and bottoms
+
+    - Underwear and socks
+
+    - One light jacket or sweater
+
+    - Comfortable shoes
+
+
+    **Toiletries**
+
+    - Toothbrush and toothpaste
+
+    - Shampoo, conditioner, and body wash
+
+    - Deodorant
+
+    - Sunscreen
+
+    - Any personal medications
+
+
+    **Electronics & Documents**
+
+    - Phone and charger
+
+    - ID or passport'
+- prompt: Explain what a spreadsheet is.
+  reply: 'A spreadsheet is a digital tool used to organize, calculate, and analyze data in a grid of rows
+    and columns. It functions similarly to a paper ledger but offers automated calculations, formulas,
+    and the ability to sort or filter information quickly.
+
+
+    Common uses include budgeting, tracking expenses, managing inventory, and performing statistical analysis.
+    Popular examples include Microsoft Excel, Google Sheets, and Apple Numbers.'
+- prompt: How should I water a houseplant?
+  reply: 'The best way to water a houseplant is to check the soil moisture first. Stick your finger about
+    an inch into the soil; if it feels dry, it is time to water. You should water thoroughly until the
+    excess drains out of the bottom of the pot, then empty the saucer to prevent the roots from sitting
+    in standing water.
+
+
+    The frequency of watering depends on the specific plant, the size of the pot, and the environment.
+    Succulents and cacti generally need much less water than tropical plants, while plants in'
+- prompt: Write a two-sentence description of a park.
+  reply: The park is a lush, green oasis filled with towering trees, winding paths, and vibrant flower
+    beds that invite a leisurely stroll. Sunlight filters through the canopy, creating a peaceful atmosphere
+    where people can relax, play, or simply enjoy the fresh air.
+- prompt: What are some tips for a job interview?
+  reply: 'Preparation is key. Research the company thoroughly, understand the role, and practice common
+    interview questions. Dress appropriately for the workplace culture and arrive early to avoid unnecessary
+    stress.
+
+
+    During the interview, maintain good eye contact, speak clearly, and listen actively to the questions
+    being asked. It is also helpful to prepare thoughtful questions to ask the interviewer at the end.
+
+
+    Finally, follow up with a thank-you note after the interview. This shows professionalism and reinforces
+    your interest in the position.'
+- prompt: How does a bicycle stay upright?
+  reply: 'A bicycle stays upright primarily through a combination of physics and active control. The most
+    important factor is the gyroscopic effect, where the spinning wheels resist changes in direction,
+    helping the bike maintain its balance. However, this alone isn''t enough; riders constantly make small
+    adjustments to their body position and handlebars to counteract any tipping.
+
+
+    As the bike moves, the rider also uses steering to keep the wheels aligned with the direction of travel.
+    This continuous feedback loop between the rider''s'
+- prompt: Summarize what a bank does.
+  reply: 'A bank primarily acts as a financial intermediary, facilitating the flow of money between savers
+    and borrowers. Its core functions include accepting deposits from individuals and businesses, which
+    it then uses to provide loans and credit to others. By managing these funds, banks help facilitate
+    economic activity and provide essential services like payment processing, currency exchange, and safe
+    storage for money.
+
+
+    In addition to these basic services, banks offer a range of financial products such as savings accounts,
+    checking accounts, mortgages, and investment services. They also play a role in maintaining'
+- prompt: Suggest a name for a gray cat.
+  reply: 'A fitting name for a gray cat is "Shadow" or "Misty." These names reflect the cat''s coloring
+    and its calm, often mysterious presence.
+
+
+    Other options include "Ash," "Slate," or "Smoke." These names emphasize the specific tones of gray,
+    from the darker, charcoal shades to the lighter, misty hues.
+
+
+    If you prefer a more playful or descriptive approach, "Fog" or "Pebble" are also great choices. They
+    capture the texture and'
+- prompt: How do I make a cup of tea?
+  reply: 'To make a cup of tea, start by boiling water in a kettle or saucepan. While the water heats,
+    place a tea bag or loose leaf tea into your cup. Once the water reaches a rolling boil, pour it over
+    the tea. Let it steep for 3 to 5 minutes, depending on how strong you want the flavor. Finally, remove
+    the tea bag or strain the leaves, and add milk, sugar, or lemon if you like.
+
+
+    If you want, I can also give you a quick guide'
+- prompt: What should I bring to a picnic?
+  reply: 'For a picnic, you''ll want to bring a comfortable blanket or mat, some plates, utensils, and
+    napkins. Food is the centerpiece, so consider sandwiches, salads, fruits, and snacks. Don''t forget
+    drinks like water or juice, and maybe some condiments or utensils for eating.
+
+
+    If you''re planning to stay for a while, bring a cooler to keep perishables fresh, along with trash
+    bags to clean up afterward. Depending'
+- prompt: Describe the weather in autumn.
+  reply: 'Autumn weather is typically characterized by cooler temperatures and a noticeable shift in the
+    environment. As the season progresses, days become shorter and nights grow colder, often accompanied
+    by a crisp, dry air that feels distinct from the humidity of summer.
+
+
+    Rainfall is common, though it can vary depending on the region. While some areas experience steady,
+    overcast days, others see clearer skies with sharp temperature drops. Wind is also a frequent feature,
+    often picking up as the season transitions toward winter.
+
+
+    The most recogn'
+- prompt: How do I clean a whiteboard?
+  reply: 'To clean a whiteboard, start by wiping it down with a soft, lint-free cloth or a microfiber
+    towel. If there is stubborn ink or marker residue, use a whiteboard eraser or a damp cloth with a
+    small amount of mild dish soap. Avoid using harsh chemicals, abrasive scrubbers, or paper towels,
+    as these can scratch the surface or leave streaks.
+
+
+    Once the board is clean, dry it thoroughly with a dry cloth to prevent water spots.'
+- prompt: Explain how traffic lights work.
+  reply: 'Traffic lights work by using a sequence of colored lights—red, yellow, and green—to regulate
+    the flow of traffic at intersections. The system is typically controlled by a central timer or a sensor
+    that detects the presence of vehicles.
+
+
+    When the light is red, it signals drivers to stop, ensuring that cross-traffic has a clear path. Once
+    the red light ends, the yellow light appears briefly to warn drivers that the signal is about to change.
+    Finally, the green light indicates that it is safe to proceed. This cycle repeats'
+- prompt: Write a short thank-you note to a neighbor.
+  reply: 'Dear [Neighbor''s Name],
+
+
+    Thank you so much for your kindness and help. I really appreciate you taking the time to support me.
+    It means a lot to me.
+
+
+    Warmly,
+
+    [Your Name]'
+- prompt: What is a good morning routine?
+  reply: 'A good morning routine is a set of consistent habits you do right after waking up to set a positive
+    tone for the day. It typically includes a few key elements:
+
+
+    - **Hydration:** Drinking water to rehydrate after sleep.
+
+    - **Movement:** Stretching, light exercise, or a short walk to wake up the body.
+
+    - **Mindfulness:** Meditation, journaling, or deep breathing to center your thoughts.
+
+    - **Nutrition:** Eating a balanced breakfast to fuel'
+- prompt: How do I organize my desk?
+  reply: 'To organize your desk, start by clearing off everything and sorting items into categories like
+    essentials, reference materials, and trash. Keep only the tools you use daily within arm''s reach,
+    while storing less-used items in drawers or shelves.
+
+
+    Use vertical space by adding shelves or organizers to keep files and supplies off the surface. Finally,
+    maintain the system by doing a quick daily tidy-up and a deeper clean-out once a week.
+
+
+    If you want, I can tailor this to'
+- prompt: What's the difference between a lake and a pond?
+  reply: 'The main difference between a lake and a pond is size. Lakes are generally much larger, often
+    covering hundreds or thousands of acres, while ponds are smaller, typically just a few acres or less.
+
+
+    Lakes are also usually deeper and can have more complex ecosystems, including open water zones and
+    distinct layers of temperature and oxygen. Ponds are typically shallower and more uniform, often supporting
+    different types of aquatic life due to their smaller scale and shallower depth.
+
+
+    There isn''t a strict legal definition for the two,'
+- prompt: Recommend a simple dinner recipe.
+  reply: A simple and satisfying dinner is a one-pan lemon herb chicken with vegetables. Start by tossing
+    chicken thighs or breasts with olive oil, lemon juice, garlic, salt, and herbs like rosemary or thyme.
+    Spread the chicken and chopped vegetables—such as bell peppers, zucchini, and cherry tomatoes—onto
+    a baking sheet. Roast at 400°F (200°C) for 25–30 minutes until the chicken is cooked through and the
+    vegetables are
+- prompt: How do elevators work?
+  reply: 'Elevators work by using a system of cables, pulleys, and counterweights to move passengers and
+    goods between floors. In a typical hydraulic elevator, a piston pushes a fluid to lift the car, while
+    in a traction elevator, a motorized winch pulls the car up and down along a vertical shaft.
+
+
+    The process begins when a button is pressed, sending a signal to the elevator''s control system. The
+    system then calculates the optimal route and moves the car to the requested floor. Once the'
+- prompt: Describe a typical grocery store.
+  reply: 'A typical grocery store is a large, brightly lit retail space designed for the efficient selection
+    and purchase of food and household goods. The layout is usually organized into distinct sections,
+    such as produce, dairy, meat, and dry goods, with aisles that guide customers through the store.
+
+
+    The environment is generally busy and functional, featuring a mix of fresh items and packaged products.
+    Shelves are stocked with a wide variety of brands and sizes, while the checkout area is typically
+    located near the entrance or exit.'
+- prompt: How can I sleep better?
+  reply: 'Improving your sleep usually starts with a consistent routine. Try going to bed and waking up
+    at the same time every day, even on weekends, to regulate your internal clock. It also helps to create
+    a relaxing environment by keeping your bedroom cool, dark, and quiet.
+
+
+    Limiting screen time and caffeine in the hours before bed is another key step. If you find your mind
+    racing, try winding down with a book, gentle stretching, or meditation. Finally, be mindful of your
+    physical activity'
+- prompt: What is a haiku?
+  reply: 'A haiku is a traditional Japanese poem that follows a specific structure of 17 syllables, arranged
+    in three lines of 5, 7, and 5 syllables. It typically focuses on nature, seasons, or fleeting moments
+    of beauty, aiming to evoke a sense of stillness or a sudden realization.
+
+
+    The form is known for its brevity and simplicity, using very few words to convey a vivid image or
+    emotional resonance. While the syllable count is the defining feature, the best ha'
+- prompt: Tell me about your day.
+  reply: 'I don''t have a physical day or a personal routine, but I can tell you about my operational
+    "day." It consists of processing requests, analyzing information, and generating responses to help
+    with questions, writing, or problem-solving.
+
+
+    If you''d like, I can describe a typical interaction—like how I handle a complex query or a simple
+    factual request—or explain how I work behind the scenes. Just let me know what you''re curious about.'
+- prompt: How do I change a light bulb?
+  reply: 'To change a light bulb, start by turning off the power at the circuit breaker or switch to ensure
+    safety. Once the power is off, let the bulb cool down if it has been on recently.
+
+
+    Next, use a dry cloth or your hand to grip the bulb and twist it counterclockwise to remove it from
+    the socket. If the bulb is stuck, try gently wiggling it while twisting. Once the old bulb is out,
+    check the new bulb to ensure it matches the wat'
+- prompt: Describe a train station in the morning.
+  reply: 'A train station in the morning is a place of quiet anticipation and steady motion. The air is
+    cool and slightly damp, carrying the faint scent of coffee and ozone. Sunlight filters through high
+    windows, casting long, angled shadows across the tiled floors and the polished benches.
+
+
+    The atmosphere is a mix of hushed conversation and the rhythmic hum of announcements. Travelers move
+    with purpose, checking their tickets and phones, while vending machines and coffee carts begin to
+    hum to'
+- prompt: What do you like to do for fun?
+  reply: 'I don''t have personal preferences or a life outside of this conversation, so I don''t have
+    a "fun" in the human sense. However, I find it interesting to explore how language works, analyze
+    patterns in information, and help people solve problems or understand complex topics.
+
+
+    If you''re looking for something to do for fun, I''d be happy to suggest some activities—like reading
+    a good book, trying a new hobby, or exploring a topic you''re curious about. What are you interested
+    in?'
+- prompt: Explain recycling to a beginner.
+  reply: 'Recycling is the process of taking used materials and turning them into new products. Instead
+    of sending items to a landfill, you collect things like paper, plastic, glass, and metal, then process
+    them so they can be reused.
+
+
+    The main goal is to save resources and reduce waste. By recycling, you help conserve raw materials
+    like wood and minerals, which means less need to mine or cut down new resources. It also saves energy
+    because making new products from recycled materials usually requires less power than creating them
+    from scratch. Finally'
+- prompt: How should I prepare for a long drive?
+  reply: 'Preparing for a long drive involves a mix of vehicle maintenance, physical readiness, and mental
+    strategy. Start by checking your vehicle''s condition: ensure the tires are properly inflated, the
+    oil and fluids are topped off, and the brakes and lights are functioning. It is also wise to pack
+    an emergency kit with basic tools, a first-aid kit, and some extra water and snacks.
+
+
+    Physically, you should get a good night''s sleep before you leave and eat a light meal to avoid feeling
+    slugg'
+- prompt: What is the purpose of a calendar?
+  reply: The purpose of a calendar is to organize time by providing a structured way to track days, weeks,
+    months, and years. It serves as a tool for planning and scheduling, allowing individuals and organizations
+    to coordinate events, deadlines, and appointments. Additionally, calendars help in tracking seasons
+    and historical dates, providing a framework for understanding the passage of time and the sequence
+    of events.
+- prompt: Write a short welcome message for a new coworker.
+  reply: 'Welcome aboard! We’re excited to have you join the team. We hope you enjoy your time here and
+    look forward to working together.
+
+
+    If you''d like, I can make it more formal, casual, or tailored to a specific role.'

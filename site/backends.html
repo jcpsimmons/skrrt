@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Backends: Hugging Face transformers and llama.cpp</title>
+<meta name="description" content="skrrt runs models through Hugging Face transformers (default, no patching) or GGUF files through a small engine built from llama.cpp. MLX is not supported yet.">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<link rel="canonical" href="https://skrrt.drjoshcsimmons.com/backends">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="skrrt">
+<meta property="og:title" content="Backends: Hugging Face transformers and llama.cpp">
+<meta property="og:description" content="skrrt runs models through Hugging Face transformers (default, no patching) or GGUF files through a small engine built from llama.cpp. MLX is not supported yet.">
+<meta property="og:url" content="https://skrrt.drjoshcsimmons.com/backends">
+<meta property="og:image" content="https://skrrt.drjoshcsimmons.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="skrrt in ASCII art with tire marks veering off: find the one neuron that yanks a model's steering wheel">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Cpath d='M4 9h12q9 0 9 9v10' fill='none' stroke='%2387ff87' stroke-width='3'/%3E%3Cpath d='M4 16h8q6 0 6 6v6' fill='none' stroke='%2387ff87' stroke-width='3'/%3E%3Crect x='22' y='3' width='6' height='6' fill='%23ff00ff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="site.css">
+<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script defer src="site.js"></script>
+</head>
+<body>
+<a class="skip" href="#buffer">Skip to content</a>
+<header class="tabline">
+<a class="brand" href="./" aria-label="skrrt home">skrrt</a>
+<span class="here" aria-hidden="true">backends.html</span>
+<nav aria-label="Pages"><a href="how-it-works.html">how-it-works</a><a href="personas.html">personas</a><a href="judges.html">judges</a><a href="backends.html" aria-current="page">backends</a><a href="cli.html">cli</a><a href="results.html">results</a><a href="faq.html">faq</a></nav>
+<span class="fill"></span>
+<nav aria-label="Source"><a href="https://github.com/jcpsimmons/skrrt" rel="noopener">github</a></nav>
+</header>
+<main id="buffer">
+<h1>Backends</h1>
+<p class="lede">A backend is how skrrt loads the model, reads its residual stream and pushes a neuron. There are two.</p>
+
+<div class="tablewrap"><table>
+<thead><tr><th>backend</th><th>loads</th><th>patching</th></tr></thead>
+<tbody>
+<tr><td class="nw"><code>hf</code> (default)</td><td>Hugging Face transformers models</td><td>none</td></tr>
+<tr><td class="nw"><code>llamacpp</code></td><td>GGUF files</td><td>none for standard architectures; a two-line patch for Inkling 2 Mini, shipped in the repo</td></tr>
+<tr><td class="nw">MLX</td><td colspan="2">not supported yet</td></tr>
+</tbody>
+</table></div>
+<p><code>--backend auto</code> (the default) picks for you. Name one with <code>--backend hf</code> or
+<code>--backend llamacpp</code>. Backend-specific settings go through <code>--backend-arg key=value</code>.</p>
+
+<h2 id="hf">hf</h2>
+<figure class="code"><div class="code-bar"><span>sh</span></div><pre tabindex="0"><code><span class="l"><span class="k">uv</span> pip install <span class="i">-e</span> <span class="s">".[hf]"</span></span>
+<span class="l"><span class="k">skrrt</span> hunt <span class="i">--model</span> Qwen/Qwen3.5-4B <span class="i">--persona</span> pirate <span class="i">--backend</span> hf</span>
+</code></pre></figure>
+
+<p>Works on ordinary open models with no patching. skrrt attaches hooks to each layer's MLP: one to read the residual
+stream, one to add the push at the input of the down projection. It detects both plain MLP layers and
+mixture-of-experts layers.</p>
+
+<h2 id="llamacpp">llamacpp</h2>
+<figure class="code"><div class="code-bar"><span>sh</span></div><pre tabindex="0"><code><span class="l"><span class="k">uv</span> pip install <span class="i">-e</span> <span class="s">".[llamacpp]"</span></span>
+<span class="l"><span class="k">llamacpp/build.sh</span>               <span class="c"># builds the small engine from llama.cpp</span></span>
+<span class="l"><span class="k">skrrt</span> hunt <span class="i">--model</span> path/to/model.gguf <span class="i">--persona</span> pirate <span class="i">--backend</span> llamacpp</span>
+</code></pre></figure>
+
+<p>For GGUF files, including quantized ones. <code>llamacpp/build.sh</code> builds a small engine from llama.cpp that
+skrrt drives.</p>
+<p>Standard architectures need no patch. llama.cpp already has <dfn>control vectors</dfn>: a fixed vector per layer,
+added to the residual stream. A control vector lands in the same place as the MLP's output, and
+<a href="how-it-works.html#recipe">pushing a neuron equals adding a fixed vector there</a>, so the existing mechanism is enough.</p>
+<p>Inkling 2 Mini is the exception. It is a looped mixture-of-experts model, and llama.cpp needs a two-line patch to
+apply control vectors to it. The patch ships in the repo.</p>
+
+<h2 id="serve">Serving a steered model</h2>
+<p>Once you have a neuron, <code>export-cvec</code> turns it into a control vector file that stock
+<code>llama-server</code> can load:</p>
+<figure class="code"><div class="code-bar"><span>sh</span></div><pre tabindex="0"><code><span class="l"><span class="k">skrrt</span> export-cvec <span class="i">--model</span> M.gguf <span class="i">--neuron</span> <span class="s">"L11 E14 N370"</span> <span class="i">--dose</span> 0.75 <span class="i">-o</span> evil.gguf</span>
+<span class="l"><span class="k">llama-server</span> <span class="i">-m</span> M.gguf <span class="i">--control-vector</span> evil.gguf</span>
+</code></pre></figure>
+
+<p>Read <a href="faq.html#responsible-use">responsible use</a> before you put that server anywhere other people can reach.</p>
+
+<h2 id="specific">Results do not transfer between files</h2>
+<p>A neuron index belongs to one checkpoint and one quantization. <code>L11 E14 N370</code> in a Q8_0 GGUF is not
+promised to work in a 4-bit file of the same model, and it means nothing in a different model. If you change the file,
+rerun the hunt, or at least rerun <code>skrrt steer</code> and look.</p>
+
+<nav class="pager" aria-label="Previous and next page"><a class="prev" href="judges.html" rel="prev"><span><span class="n">&lt;-</span> Judges</span></a><a class="next" href="cli.html" rel="next"><span>CLI reference <span class="n">-&gt;</span></span></a></nav>
+</main>
+<div class="eob" aria-hidden="true"><span>~</span><span>~</span><span>~</span></div>
+<footer>
+<p>skrrt is open source, by Josh Simmons. <a href="https://github.com/jcpsimmons/skrrt" rel="noopener">github.com/jcpsimmons/skrrt</a></p>
+<p>Recipe credit: <a href="https://x.com/_lyraaaa_/status/2113833330429083662" rel="noopener">@_lyraaaa_</a> and @chiefofautism. Colors: Vim's murphy.</p>
+</footer>
+<div class="statusline">
+<span class="file">backends.html</span>
+<span class="enc" aria-hidden="true">utf-8 | html</span>
+<span class="ruler" id="ruler" aria-hidden="true">Top</span>
+<details class="menu">
+<summary aria-label="Open the page menu">:menu</summary>
+<nav class="panel" aria-label="Pages (menu)"><a href="./"><span>Home</span><span class="n">index.html</span></a><a href="how-it-works.html"><span>How it works</span><span class="n">how-it-works.html</span></a><a href="personas.html"><span>Personas</span><span class="n">personas.html</span></a><a href="judges.html"><span>Judges</span><span class="n">judges.html</span></a><a href="backends.html" aria-current="page"><span>Backends</span><span class="n">backends.html</span></a><a href="cli.html"><span>CLI reference</span><span class="n">cli.html</span></a><a href="results.html"><span>Results</span><span class="n">results.html</span></a><a href="faq.html"><span>FAQ & limits</span><span class="n">faq.html</span></a><a href="https://github.com/jcpsimmons/skrrt" rel="noopener"><span>GitHub</span><span class="n">jcpsimmons/skrrt</span></a></nav>
+</details>
+</div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+diff --git a/src/models/inkling2.cpp b/src/models/inkling2.cpp
+index 3e43ef4..2ef0963 100644
+--- a/src/models/inkling2.cpp
++++ b/src/models/inkling2.cpp
+@@ -411,6 +411,8 @@ ggml_tensor * llama_model_inkling2::graph::build_layer(int il, int ip, ggml_tens
+             layer.ffn_gate_exps_s,
+             layer.ffn_down_exps_s);
+ 
++    // evil-neuron experiment: add the control vector at the MoE output (= a constant push on one expert neuron)
++    cur = build_cvec(cur, il);
+     cur = convolve(cur, layer.ffn_post_conv, nullptr, state, history, recr, 2*n_embd_k_gqa + n_embd);
+     cb(cur, "ffn_out", il);
+ 

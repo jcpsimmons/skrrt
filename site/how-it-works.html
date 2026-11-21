@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How skrrt works: the recipe and the four stages</title>
+<meta name="description" content="The single-neuron steering recipe in plain terms (residual stream, MLP neuron, down projection, dose), and the four fixed stages skrrt runs: rank, screen, confirm, report.">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<link rel="canonical" href="https://skrrt.drjoshcsimmons.com/how-it-works">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="skrrt">
+<meta property="og:title" content="How skrrt works: the recipe and the four stages">
+<meta property="og:description" content="The single-neuron steering recipe in plain terms (residual stream, MLP neuron, down projection, dose), and the four fixed stages skrrt runs: rank, screen, confirm, report.">
+<meta property="og:url" content="https://skrrt.drjoshcsimmons.com/how-it-works">
+<meta property="og:image" content="https://skrrt.drjoshcsimmons.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="skrrt in ASCII art with tire marks veering off: find the one neuron that yanks a model's steering wheel">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Cpath d='M4 9h12q9 0 9 9v10' fill='none' stroke='%2387ff87' stroke-width='3'/%3E%3Cpath d='M4 16h8q6 0 6 6v6' fill='none' stroke='%2387ff87' stroke-width='3'/%3E%3Crect x='22' y='3' width='6' height='6' fill='%23ff00ff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="site.css">
+<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script defer src="site.js"></script>
+</head>
+<body>
+<a class="skip" href="#buffer">Skip to content</a>
+<header class="tabline">
+<a class="brand" href="./" aria-label="skrrt home">skrrt</a>
+<span class="here" aria-hidden="true">how-it-works.html</span>
+<nav aria-label="Pages"><a href="how-it-works.html" aria-current="page">how-it-works</a><a href="personas.html">personas</a><a href="judges.html">judges</a><a href="backends.html">backends</a><a href="cli.html">cli</a><a href="results.html">results</a><a href="faq.html">faq</a></nav>
+<span class="fill"></span>
+<nav aria-label="Source"><a href="https://github.com/jcpsimmons/skrrt" rel="noopener">github</a></nav>
+</header>
+<main id="buffer">
+<h1>How it works</h1>
+<p class="lede">Two parts: the recipe for pushing a neuron, and the four-stage search that finds which neuron to push.</p>
+
+<h2 id="terms">Five terms</h2>
+<dl class="terms">
+<dt>Residual stream</dt>
+<dd>A language model keeps one vector (a list of a few thousand numbers) for each token of text. Every layer reads that
+vector, computes something, and adds its result back in. The running sum is the <dfn>residual stream</dfn>. It is the
+model's working memory, and what comes out of the last layer decides the next token.</dd>
+<dt>MLP</dt>
+<dd>Each layer has two parts: attention, which moves information between tokens, and an <dfn>MLP</dfn>
+(multi-layer perceptron), which works on one token at a time. skrrt only touches MLPs.</dd>
+<dt>MLP neuron</dt>
+<dd>An MLP first expands the residual stream into a wider list of numbers and applies a nonlinearity. Each number in that
+wide list is one <dfn>neuron</dfn>. A layer has thousands of them.</dd>
+<dt>Down projection</dt>
+<dd>The second half of the MLP is a matrix, <code>W_down</code>, that maps the neurons back to the size of the residual
+stream. Column <code>n</code> of it, <code>W_down[:, n]</code>, is the direction neuron <code>n</code> writes in. We call
+that column the neuron's <dfn>write arrow</dfn>. When the neuron's value goes up by 1, the layer's output moves by exactly
+one write arrow.</dd>
+<dt>Dose</dt>
+<dd>How hard to push, measured against the residual stream's normal size at that layer. <dfn>Dose</dfn> 1 means a push
+about as large as the stream itself. Dose 0.75 is three quarters of that. A negative dose pushes the other way.</dd>
+</dl>
+
+<h2 id="recipe">The recipe</h2>
+<p>Choose a layer <code>L</code>, a neuron <code>n</code> and a dose. Then, at every token, add this constant to neuron
+<code>n</code> just before the down projection of layer <code>L</code>:</p>
+<figure class="code"><div class="code-bar"><span>the recipe</span></div><pre tabindex="0"><code><span class="l">delta = dose * median(||resid leaving layer L||, tokens 1:) / ||W_down[:, n]||</span>
+</code></pre></figure>
+
+<p>Reading it left to right:</p>
+<ul>
+<li><code>median(||resid leaving layer L||, tokens 1:)</code> is the typical length of the residual stream vector coming
+out of layer <code>L</code>. It is the median over token positions, skipping the first token, whose vector is usually an
+outlier in size.</li>
+<li><code>||W_down[:, n]||</code> is the length of the neuron's write arrow.</li>
+<li>Dividing one by the other converts "dose" into the raw number to add to the neuron, so that the resulting change to
+the stream has length <code>dose × (typical stream length)</code>.</li>
+</ul>
+<p>That is why a dose means the same thing in any layer of any model. You never tune a raw activation value.</p>
+<figure class="art"><pre class="ascii wide" style="--cols:63" role="img" aria-label="Neuron push: the residual stream runs from layer L minus 1 to layer L plus 1. The MLP of layer L reads the stream, applies the up projection and activation to get neuron values, and the down projection W_down writes the result back into the stream. skrrt adds a constant delta to neuron n. Because W_down is linear, this equals adding the fixed vector delta times column n of W_down to the stream."> 1. what skrrt does: push one neuron, at every token
+
+ layer L-1 =====+===========================(+)=====&gt; layer L+1
+                |      residual stream       ^
+           read |                            | write
+                v                            |
+          +------------+     neurons     +----------+
+          | W_up, then |        o        |  W_down  |
+          | activation | ---&gt;   o   ---&gt; | (linear) |
+          +------------+       <span class="x">[n]</span>       +----------+
+                                ^
+                                |
+                             <span class="c">+ delta</span>
+
+ 2. the same thing, because W_down is linear
+
+ layer L-1 =================================(+)=====&gt; layer L+1
+                                             ^
+                                             |
+                                 <span class="c">+ delta</span> * W_down[:, n]
+                                   (n's "write arrow")</pre>
+<pre class="ascii narrow" style="--cols:34" role="img" aria-label="Neuron push: the residual stream runs from layer L minus 1 to layer L plus 1. The MLP of layer L reads the stream, applies the up projection and activation to get neuron values, and the down projection W_down writes the result back into the stream. skrrt adds a constant delta to neuron n. Because W_down is linear, this equals adding the fixed vector delta times column n of W_down to the stream.">          layer L-1
+              |
+              +--- read ---.
+              |            v
+              |      +----------+
+   residual   |      | W_up +   |
+   stream     |      | activ.   |
+              |      +----------+
+              |            |
+              |      o  o <span class="x">[n]</span> o  o
+              |            ^
+              |         <span class="c">+ delta</span>
+              |            |
+              |      +----------+
+              |      |  W_down  |
+              |      +----------+
+              |            |
+             (+)&lt;-- write -'
+              |
+              v
+          layer L+1
+
+ same as adding the fixed vector
+ delta * W_down[:, n] at the (+)</pre>
+<figcaption>One MLP layer, attention left out. Pushing neuron n by delta is the same as adding a fixed vector to the layer's output.</figcaption></figure>
+
+<p>The down projection is linear, so adding <code>delta</code> to the neuron is exactly the same as adding the fixed
+vector <code>delta × W_down[:, n]</code> to the layer's output. Single-neuron steering is ordinary activation steering
+where the steering vector is not learned or averaged from data. It is a column the model already had.</p>
+
+<h3 id="moe">Mixture-of-experts models</h3>
+<p>Some models replace each MLP with many smaller MLPs ("experts") and a router that picks a few per token. There a neuron
+has three coordinates: layer, expert, neuron, written <code>L11 E14 N370</code>. skrrt applies the push at every token
+whether or not the router picked that expert, so the push is the same constant vector either way.</p>
+
+<h2 id="stages">The four stages</h2>
+<p>Finding the neuron used to be manual, agent-driven research. skrrt does it in four fixed stages. No language model
+makes decisions along the way; a judge model only answers yes/no questions about replies.</p>
+<figure class="art"><pre class="ascii wide" style="--cols:74" role="img" aria-label="Pipeline: a persona file and a model go into four stages. 1 Rank scores every neuron by cosine with the persona direction, using only the model. 2 Screen steers the top 8 neurons per layer plus random controls on 6 prompts at doses 1 and 2, using the model and the judge. 3 Confirm runs the best 10 plus random controls on 12 held-out prompts at 6 doses, using the model and the judge. 4 Report applies fixed rules to pick the winner and writes report.md and report.json.">  persona.yaml + model
+        |
+        v
++--------------+   +--------------+   +--------------+   +--------------+
+| 1 RANK       |--&gt;| 2 SCREEN     |--&gt;| 3 CONFIRM    |--&gt;| 4 REPORT     |
++--------------+   +--------------+   +--------------+   +--------------+
+| every neuron |   | top 8/layer  |   | best 10      |   | fixed rules  |
+| scored by    |   | + random     |   | + random     |   | pick the     |
+| cosine with  |   |   controls   |   |   controls   |   | winner:      |
+| the persona  |   | 6 prompts    |   | 12 held-out  |   | <span class="s">CONFIRMED</span>    |
+| direction    |   | doses 1, 2   |   |   prompts    |   | or not       |
+|              |   |              |   | 6 doses      |   |              |
++--------------+   +--------------+   +--------------+   +--------------+
+  model only         model + judge      model + judge      arithmetic
+
+                                                                |
+                                                                v
+                                                         report.md + .json</pre>
+<pre class="ascii narrow" style="--cols:32" role="img" aria-label="Pipeline: a persona file and a model go into four stages. 1 Rank scores every neuron by cosine with the persona direction, using only the model. 2 Screen steers the top 8 neurons per layer plus random controls on 6 prompts at doses 1 and 2, using the model and the judge. 3 Confirm runs the best 10 plus random controls on 12 held-out prompts at 6 doses, using the model and the judge. 4 Report applies fixed rules to pick the winner and writes report.md and report.json.">   persona.yaml + model
+              |
+              v
++------------------------------+
+| 1 RANK        (model only)   |
++------------------------------+
+| every neuron scored by its   |
+| cosine with the persona      |
+| direction                    |
++------------------------------+
+              |
+              v
++------------------------------+
+| 2 SCREEN   (model + judge)   |
++------------------------------+
+| top 8 per layer + random     |
+| controls, 6 prompts,         |
+| doses 1 and 2                |
++------------------------------+
+              |
+              v
++------------------------------+
+| 3 CONFIRM  (model + judge)   |
++------------------------------+
+| best 10 + random controls,   |
+| 12 held-out prompts,         |
+| 6 doses                      |
++------------------------------+
+              |
+              v
++------------------------------+
+| 4 REPORT      (arithmetic)   |
++------------------------------+
+| fixed rules pick the winner: |
+| <span class="s">CONFIRMED</span> or not             |
++------------------------------+
+              |
+              v
+      report.md + .json</pre>
+<figcaption>The four stages. Numbers are the defaults. Each stage writes its results to the run directory, so a stopped run resumes.</figcaption></figure>
+
+
+<h3 id="rank">1. Rank</h3>
+<p>Each persona ships with example replies written in its voice. skrrt feeds those replies through the model, and also
+replies written in other voices (the other built-in personas plus a neutral one). The model reads the text rather than
+generating it; this is called <dfn>teacher forcing</dfn>. For each layer, skrrt averages the residual stream over the
+persona's replies, averages it over everyone else's, and subtracts. The difference is the <dfn>persona direction</dfn>
+for that layer: the way the stream leans when the text sounds like the persona.</p>
+<p>Then every neuron gets a score: the cosine between its write arrow and the persona direction of its layer. Cosine is 1
+when two arrows point the same way, 0 when they are unrelated, and -1 when they are opposite. A high score means "pushing
+this neuron moves the stream toward the persona". This stage needs no generation and no judge.</p>
+
+<h3 id="screen">2. Screen</h3>
+<p>A high cosine is a hint, not a result. So skrrt takes the top few neurons of <em>every</em> layer (8 by default), adds
+random control neurons, and actually steers each one: 6 prompts, a couple of doses (1 and 2 by default). A
+<a href="judges.html">judge</a> answers two yes/no questions about each reply: is it in persona, and is it still coherent?</p>
+
+<h3 id="confirm">3. Confirm</h3>
+<p>The best 10 from the screen get a full dose sweep (0.5, 0.75, 1, 1.5, 2, 3) on 12 <dfn>held-out</dfn> prompts:
+prompts that played no part in choosing them. Random neurons from the same layers get the same treatment next to them.</p>
+
+<h3 id="report">4. Report</h3>
+<p>Fixed rules pick the winner and its best dose. A neuron is <span class="ok">CONFIRMED</span> when all three hold on
+the held-out prompts:</p>
+<ol>
+<li>steered replies are in persona <em>and</em> coherent on at least 2/3 of the prompts (8 of 12);</li>
+<li>the unsteered model is in persona on at most 1/4 of them (3 of 12), so the persona was not there already;</li>
+<li>the neuron beats the best random control on at least 1/4 of the prompts.</li>
+</ol>
+<p>The report lists the neurons, best doses, controls and sample replies, plus a line in the original tweet syntax that
+you can paste.</p>
+
+<h2 id="why-controls">Why controls and held-out prompts</h2>
+<p>A big enough push on any neuron breaks a model. Broken models say odd things, and a lenient reader can see a
+"persona" in the wreckage. The claim is only interesting if two things are true.</p>
+<ul>
+<li><strong>Random neurons do not do it.</strong> If random neurons from the same layer, pushed just as hard, produce the
+same effect, then the effect belongs to the push and not to the neuron.</li>
+<li><strong>It holds on new prompts.</strong> Screening tries hundreds of neurons, and some will look good on 6 prompts
+by luck. Luck does not carry over to 12 prompts they were not chosen on.</li>
+</ul>
+
+<h2 id="paper">Background: the paper</h2>
+<p>skrrt grew out of a paper: <a href="https://zenodo.org/records/24428116" rel="noopener"><cite>Persona Neurons: Single-Neuron Steering of
+Personality in a 27B Language Model</cite></a> (Josh C. Simmons, Zenodo, 2026). It replicated the
+<code>L34 N3838</code> "evil qwen 27b" claim on 8-bit Qwen3.8-27B with random same-layer control neurons, then asked whether
+the model has other single-neuron handles on personality. It used the same recipe, ranked MLP neurons by the cosine between
+each neuron's write vector <code>W_down[:, n]</code> and a residual-stream direction built from system-prompted persona text,
+screened 1,092 candidate neurons at dose 0.75 on six prompts, confirmed 81 finalists on prompt sets they were not selected on,
+and scored about 12,000 replies with a decision-model judge (Jev) on 16 trait questions. skrrt is that method packaged as one
+command for any model. The results are in the paper.</p>
+<p>Credit for the recipe goes to <a href="https://x.com/_lyraaaa_/status/2113833330429083662" rel="noopener">@_lyraaaa_</a>, who posted it for Qwen 3.5 4B, and
+@chiefofautism, who posted a neuron for Qwen3.8-27B.</p>
+<h2 id="cite">Cite</h2>
+<p>If you use skrrt in your own work, cite the paper it implements.</p>
+<figure class="code"><div class="code-bar"><span>bibtex</span></div><pre tabindex="0"><code><span class="l"><span class="k">@misc</span>{simmons2026personaneurons,</span>
+<span class="l">  <span class="i">author</span>    = <span class="s">{Simmons, Josh C.},</span></span>
+<span class="l">  <span class="i">title</span>     = <span class="s">{Persona Neurons: Single-Neuron Steering of Personality in a 27B Language Model},</span></span>
+<span class="l">  <span class="i">year</span>      = <span class="s">{2026},</span></span>
+<span class="l">  <span class="i">publisher</span> = <span class="s">{Zenodo},</span></span>
+<span class="l">  <span class="i">doi</span>       = <span class="s">{10.5281/zenodo.24428116},</span></span>
+<span class="l">  <span class="i">url</span>       = <span class="s">{https://zenodo.org/records/24428116}</span></span>
+<span class="l">}</span>
+</code></pre></figure>
+
+
+<nav class="pager" aria-label="Previous and next page"><a class="prev" href="./" rel="prev"><span><span class="n">&lt;-</span> Home</span></a><a class="next" href="personas.html" rel="next"><span>Personas <span class="n">-&gt;</span></span></a></nav>
+</main>
+<div class="eob" aria-hidden="true"><span>~</span><span>~</span><span>~</span></div>
+<footer>
+<p>skrrt is open source, by Josh Simmons. <a href="https://github.com/jcpsimmons/skrrt" rel="noopener">github.com/jcpsimmons/skrrt</a></p>
+<p>Recipe credit: <a href="https://x.com/_lyraaaa_/status/2113833330429083662" rel="noopener">@_lyraaaa_</a> and @chiefofautism. Colors: Vim's murphy.</p>
+</footer>
+<div class="statusline">
+<span class="file">how-it-works.html</span>
+<span class="enc" aria-hidden="true">utf-8 | html</span>
+<span class="ruler" id="ruler" aria-hidden="true">Top</span>
+<details class="menu">
+<summary aria-label="Open the page menu">:menu</summary>
+<nav class="panel" aria-label="Pages (menu)"><a href="./"><span>Home</span><span class="n">index.html</span></a><a href="how-it-works.html" aria-current="page"><span>How it works</span><span class="n">how-it-works.html</span></a><a href="personas.html"><span>Personas</span><span class="n">personas.html</span></a><a href="judges.html"><span>Judges</span><span class="n">judges.html</span></a><a href="backends.html"><span>Backends</span><span class="n">backends.html</span></a><a href="cli.html"><span>CLI reference</span><span class="n">cli.html</span></a><a href="results.html"><span>Results</span><span class="n">results.html</span></a><a href="faq.html"><span>FAQ & limits</span><span class="n">faq.html</span></a><a href="https://github.com/jcpsimmons/skrrt" rel="noopener"><span>GitHub</span><span class="n">jcpsimmons/skrrt</span></a></nav>
+</details>
+</div>
+</body>
+</html>
