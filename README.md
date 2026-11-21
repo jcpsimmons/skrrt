@@ -214,3 +214,7 @@ real API (a few Jev calls, a fraction of a cent) and only runs when `OPENROUTER_
   url       = {https://zenodo.org/records/24428116}
 }
 ```
+
+## License
+
+MIT. Use it for anything; keep the copyright notice. If you publish results found with skrrt, a link back or a citation of the paper is appreciated.
