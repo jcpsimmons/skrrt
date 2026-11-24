@@ -30,7 +30,7 @@ any model.
 
 The name: skrrt, like screeching tires when you yank the wheel.
 
-Docs: https://skrrt.drjoshcsimmons.com. Source: https://github.com/jcpsimmons/skrrt.
+Docs: https://skrrt.pdl.wtf. Source: https://github.com/jcpsimmons/skrrt.
 
 ## Install
 

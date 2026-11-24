@@ -5,7 +5,7 @@ import html, re, sys
 from pathlib import Path
 
 OUT = Path(sys.argv[1])
-BASE = "https://skrrt.drjoshcsimmons.com"
+BASE = "https://skrrt.pdl.wtf"
 REPO = "https://github.com/jcpsimmons/skrrt"
 PAPER = "https://zenodo.org/records/24428116"
 TWEET = "https://x.com/_lyraaaa_/status/2113833330429083662"
